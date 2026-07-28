@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Data (gerados localmente, não versionar dados brutos grandes)
+data_generator/output/*.csv
+!data_generator/output/.gitkeep
+
+# dbt
+dbt/supply_chain/target/
+dbt/supply_chain/dbt_packages/
+dbt/supply_chain/logs/
+profiles.yml
+
+# Airflow
+airflow/logs/
+airflow/plugins/__pycache__/
+airflow/dags/__pycache__/
+
+# Docker
+*.pid
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
