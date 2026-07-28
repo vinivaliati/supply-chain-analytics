@@ -5,6 +5,7 @@ __pycache__/
 .venv/
 venv/
 .env
+!.env.example
 
 # Data (gerados localmente, não versionar dados brutos grandes)
 data_generator/output/*.csv
