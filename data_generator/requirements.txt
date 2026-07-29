@@ -2,3 +2,6 @@ pandas>=2.2.3
 numpy>=1.26.4
 Faker>=25.2.0
 python-dateutil>=2.9.0
+SQLAlchemy==2.0.30
+psycopg2-binary==2.9.9
+python-dotenv==1.0.1
