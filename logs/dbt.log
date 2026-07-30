@@ -1,0 +1,16 @@
+[0m20:47:49.285038 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x755592490440>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x755594494a50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x755590e57890>]}
+
+
+============================== 20:47:49.287822 | 6377011d-1058-4b07-a919-d9c306b3c39c ==============================
+[0m20:47:49.287822 [info ] [MainThread]: Running with dbt=1.12.0
+[0m20:47:49.288315 [debug] [MainThread]: running dbt with arguments {'use_colors': 'True', 'cache_selected_only': 'False', 'static_parser': 'True', 'hints_enabled': 'True', 'partial_parse': 'True', 'target_path': 'None', 'empty': 'None', 'indirect_selection': 'eager', 'log_cache_events': 'False', 'warn_error': 'None', 'log_path': 'logs', 'profiles_dir': '/home/vinivaliati/.dbt', 'maximum_seed_size_mib': '1', 'use_experimental_parser': 'False', 'debug': 'False', 'send_anonymous_usage_stats': 'True', 'invocation_command': 'dbt source freshness', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'version_check': 'True', 'fail_fast': 'False', 'no_print': 'None', 'introspect': 'True', 'quiet': 'False', 'log_format': 'default', 'printer_width': '80', 'write_json': 'True'}
+[0m20:47:49.288652 [error] [MainThread]: [[31mERROR[0m]: Encountered an error:
+Runtime Error
+  No dbt_project.yml found at expected path /home/vinivaliati/projects/supply-chain-analytics/dbt_project.yml
+  Verify that each entry within packages.yml (and their transitive dependencies) contains a file named dbt_project.yml
+  
+[0m20:47:49.289473 [debug] [MainThread]: Resource report: {"command_name": "freshness", "command_success": false, "command_wall_clock_time": 0.06663051, "process_in_blocks": "448", "process_kernel_time": 0.128082, "process_mem_max_rss": "121232", "process_out_blocks": "8", "process_user_time": 0.980631}
+[0m20:47:49.289840 [debug] [MainThread]: Command `dbt source freshness` failed at 20:47:49.289760 after 0.07 seconds
+[0m20:47:49.290083 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x75559122b820>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x755590fc7bf0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x755590e76cf0>]}
+[0m20:47:49.290344 [debug] [MainThread]: Flushing usage events
+[0m20:47:49.878374 [debug] [MainThread]: An error was encountered while trying to flush usage events

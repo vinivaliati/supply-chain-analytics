@@ -1,0 +1,203 @@
+version: 2
+
+models:
+  - name: stg_suppliers
+    description: "Fornecedores deduplicados e com tipos normalizados."
+    columns:
+      - name: supplier_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_products
+    description: "Catálogo de produtos deduplicado, com curva ABC e fornecedor principal."
+    columns:
+      - name: sku_id
+        tests:
+          - unique
+          - not_null
+      - name: supplier_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_suppliers')
+              field: supplier_id
+      - name: abc_curve
+        tests:
+          - accepted_values:
+              values: ['A', 'B', 'C']
+
+  - name: stg_warehouses
+    description: "Centros de distribuição deduplicados."
+    columns:
+      - name: warehouse_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_stores
+    description: "Lojas deduplicadas, cada uma associada a um CD."
+    columns:
+      - name: store_id
+        tests:
+          - unique
+          - not_null
+      - name: warehouse_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouses')
+              field: warehouse_id
+
+  - name: stg_carriers
+    description: "Transportadoras deduplicadas."
+    columns:
+      - name: carrier_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_purchase_orders
+    description: "Pedidos de compra deduplicados, com FKs para fornecedor, produto e CD."
+    columns:
+      - name: po_id
+        tests:
+          - unique
+          - not_null
+      - name: supplier_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_suppliers')
+              field: supplier_id
+      - name: sku_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: sku_id
+      - name: warehouse_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouses')
+              field: warehouse_id
+      - name: ordered_qty
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+
+  - name: stg_sales_orders
+    description: "Pedidos de venda deduplicados, com FKs para produto, loja e CD."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: sku_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: sku_id
+      - name: store_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_stores')
+              field: store_id
+      - name: warehouse_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouses')
+              field: warehouse_id
+      - name: requested_qty
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+
+  - name: stg_shipments
+    description: "Envios deduplicados, fonte de verdade de OTD de transporte."
+    columns:
+      - name: shipment_id
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sales_orders')
+              field: order_id
+      - name: carrier_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_carriers')
+              field: carrier_id
+      - name: warehouse_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouses')
+              field: warehouse_id
+      - name: store_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_stores')
+              field: store_id
+
+  - name: stg_inventory_snapshots
+    description: "Snapshot diário de estoque por SKU/CD, grão composto (data + sku + warehouse)."
+    columns:
+      - name: sku_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: sku_id
+      - name: warehouse_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouses')
+              field: warehouse_id
+      - name: theoretical_stock
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - snapshot_date
+            - sku_id
+            - warehouse_id
+
+  - name: stg_physical_counts
+    description: "Eventos de contagem física, frequência determinada pela curva ABC do produto."
+    columns:
+      - name: count_id
+        tests:
+          - unique
+          - not_null
+      - name: sku_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: sku_id
+      - name: warehouse_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouses')
+              field: warehouse_id
+      - name: count_type
+        tests:
+          - accepted_values:
+              values: ['daily', 'weekly', 'monthly']

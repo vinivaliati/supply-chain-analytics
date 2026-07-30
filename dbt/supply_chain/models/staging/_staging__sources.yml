@@ -1,0 +1,96 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Dados brutos gerados pelo data_generator e carregados via Airflow."
+    schema: raw
+    loader: airflow
+
+    # Freshness: como nosso pipeline roda sob demanda (não é streaming real),
+    # configurei limites relativamente frouxos (480h/1680h) isso é mais um
+    # exercício de "saber que existe" do que algo crítico aqui, mas é
+    # exatamente como se configura freshness em produção.
+    freshness:
+      warn_after: {count: 480, period: hour} 
+      error_after: {count: 1680, period: hour}
+    loaded_at_field: "current_timestamp"
+
+    tables:
+      - name: suppliers
+        description: "Fornecedores, com score de confiabilidade e lead time prometido."
+        columns:
+          - name: supplier_id
+            tests:
+              - unique
+              - not_null
+
+      - name: products
+        description: "Catálogo de produtos, com curva ABC fixa e fornecedor principal."
+        columns:
+          - name: sku_id
+            tests:
+              - unique
+              - not_null
+
+      - name: warehouses
+        description: "Centros de distribuição."
+        columns:
+          - name: warehouse_id
+            tests:
+              - unique
+              - not_null
+
+      - name: stores
+        description: "Lojas, cada uma associada a um CD abastecedor."
+        columns:
+          - name: store_id
+            tests:
+              - unique
+              - not_null
+
+      - name: carriers
+        description: "Transportadoras responsáveis pelo trânsito CD -> loja."
+        columns:
+          - name: carrier_id
+            tests:
+              - unique
+              - not_null
+
+      - name: purchase_orders
+        description: "Pedidos de compra (reposição) aos fornecedores."
+        columns:
+          - name: po_id
+            tests:
+              - unique
+              - not_null
+
+      - name: sales_orders
+        description: "Pedidos de venda (demanda de lojas), com fulfilled_qty resolvido pelo motor de estoque."
+        columns:
+          - name: order_id
+            tests:
+              - unique
+              - not_null
+
+      - name: shipments
+        description: "Envios entre CD e loja, fonte de verdade para OTD de transporte."
+        columns:
+          - name: shipment_id
+            tests:
+              - unique
+              - not_null
+
+      - name: inventory_snapshots
+        description: "Snapshot diário de estoque por SKU/CD (teórico sempre, físico condicional à curva ABC)."
+        columns:
+          - name: snapshot_date
+            tests:
+              - not_null
+
+      - name: physical_counts
+        description: "Eventos de contagem física, frequência determinada pela curva ABC do produto."
+        columns:
+          - name: count_id
+            tests:
+              - unique
+              - not_null
