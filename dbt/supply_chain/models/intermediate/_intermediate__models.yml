@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: int_inventory_physical_projection
+    description: >
+      Projeta o estoque físico nos dias sem contagem, usando o último físico
+      conhecido ajustado pelos deltas do teórico desde essa contagem
+      (técnica "islands and gaps").
+    columns:
+      - name: physical_stock_projected
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+
+  - name: int_order_fulfillment
+    description: >
+      Base do OTIF: cruza pedidos de venda com envios, decompondo em
+      is_in_full, is_on_time e is_otif.
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: fill_rate
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+                inclusive: true
+
+  - name: int_inventory_coverage
+    description: >
+      Cobertura de estoque em dias (física projetada e teórica), com flags
+      de risco (abaixo do estoque de segurança, ponto de pedido, ruptura).
+
+  - name: int_stockout_events
+    description: >
+      Eventos de ruptura (fulfilled_qty < requested_qty), enriquecidos com
+      contexto de estoque no momento do pedido, para análise de causa-raiz.
+    columns:
+      - name: lost_units
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
