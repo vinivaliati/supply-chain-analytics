@@ -2,6 +2,9 @@
 DAG que orquestra o pipeline de dados sinteticos de supply chain:
 1. Gera os dados (dimensoes, compras, vendas, estoque, contagens, shipments)
 2. Carrega os CSVs gerados no Postgres (schema raw)
+3. Instala dependencias do dbt (dbt_utils)
+4. Roda as transformacoes do dbt (staging -> intermediate -> marts)
+5. Roda os testes do dbt
 """
 import os
 import sys
@@ -9,10 +12,17 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.bash import BashOperator
 
 # Garante que o modulo data_generator seja encontrado dentro do container
 sys.path.insert(0, "/opt/airflow")
-os.environ["DB_HOST"] = "host.docker.internal"
+
+# Host do Postgres de dados, visto de dentro do container do Airflow.
+# Credenciais (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB) vem do .env
+# da raiz do projeto, carregado via env_file no docker-compose.yml do Airflow.
+os.environ["SUPPLY_CHAIN_DB_HOST"] = "host.docker.internal"
+
+DBT_PROJECT_DIR = "/opt/airflow/dbt/supply_chain"
 
 
 def run_data_generation():
@@ -27,11 +37,11 @@ def run_data_load():
 
 with DAG(
     dag_id="generate_and_load_supply_chain_data",
-    description="Gera dados sinteticos de supply chain e carrega no Postgres (schema raw)",
+    description="Gera dados sinteticos de supply chain, carrega no Postgres e roda as transformacoes dbt",
     start_date=datetime(2024, 1, 1),
-    schedule=None,  # por enquanto, só roda manualmente
+    schedule=None,
     catchup=False,
-    tags=["supply-chain", "data-generation"],
+    tags=["supply-chain", "data-generation", "dbt"],
 ) as dag:
 
     generate_data = PythonOperator(
@@ -44,4 +54,29 @@ with DAG(
         python_callable=run_data_load,
     )
 
-    generate_data >> load_data
+    dbt_clean = BashOperator(
+        task_id="dbt_clean",
+        bash_command=f"cd {DBT_PROJECT_DIR} && rm -rf target",
+    )
+
+    dbt_deps = BashOperator(
+        task_id="dbt_deps",
+        bash_command=f"cd {DBT_PROJECT_DIR} && dbt deps",
+    )
+
+    dbt_run = BashOperator(
+        task_id="dbt_run",
+        bash_command=f"cd {DBT_PROJECT_DIR} && dbt run",
+    )
+
+    dbt_snapshot = BashOperator(
+        task_id="dbt_snapshot",
+        bash_command=f"cd {DBT_PROJECT_DIR} && dbt snapshot",
+    )
+
+    dbt_test = BashOperator(
+        task_id="dbt_test",
+        bash_command=f"cd {DBT_PROJECT_DIR} && dbt test",
+    )
+
+    generate_data >> load_data >> dbt_clean >> dbt_deps >> dbt_run >> dbt_snapshot >> dbt_test

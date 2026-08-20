@@ -29,3 +29,4 @@ airflow/dags/__pycache__/
 .vscode/
 .DS_Store
 Thumbs.db
+dbt/supply_chain/package-lock.yml

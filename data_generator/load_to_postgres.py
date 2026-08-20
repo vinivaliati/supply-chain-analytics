@@ -18,7 +18,7 @@ load_dotenv()
 DB_USER = os.getenv("POSTGRES_USER")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 DB_NAME = os.getenv("POSTGRES_DB")
-DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_HOST = os.getenv("SUPPLY_CHAIN_DB_HOST", "localhost")
 DB_PORT = "5432"
 
 OUTPUT_DIR = "data_generator/output"
@@ -50,7 +50,7 @@ def _load_csv_to_table(conn, csv_path: str, table_name: str):
         f'"{col}" {_pandas_dtype_to_pg(dtype)}' for col, dtype in df.dtypes.items()
     )
 
-    conn.execute(text(f'DROP TABLE IF EXISTS {SCHEMA}."{table_name}"'))
+    conn.execute(text(f'DROP TABLE IF EXISTS {SCHEMA}."{table_name}" CASCADE'))
     conn.execute(text(f'CREATE TABLE {SCHEMA}."{table_name}" ({columns_sql})'))
 
     # Usa COPY (via psycopg2 raw connection) para carga rápida em lote
