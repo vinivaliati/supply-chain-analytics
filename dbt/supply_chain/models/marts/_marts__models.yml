@@ -20,8 +20,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_suppliers')
-              field: supplier_id
+              arguments:
+                to: ref('dim_suppliers')
+                field: supplier_id
 
   - name: dim_suppliers
     description: "Dimensão de fornecedores."
@@ -50,8 +51,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_warehouses')
-              field: warehouse_id
+              arguments:
+                to: ref('dim_warehouses')
+                field: warehouse_id
 
   - name: fct_otif
     description: "Fato de OTIF: um registro por pedido de venda, com flags de in_full, on_time e otif."
@@ -64,20 +66,23 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_products')
-              field: sku_id
+              arguments:
+                to: ref('dim_products')
+                field: sku_id
       - name: store_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_stores')
-              field: store_id
+              arguments:
+                to: ref('dim_stores')
+                field: store_id
       - name: warehouse_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_warehouses')
-              field: warehouse_id
+              arguments:
+                to: ref('dim_warehouses')
+                field: warehouse_id
 
   - name: fct_inventory_daily
     description: "Fato de estoque diário por SKU/CD, com cobertura em dias e flags de risco."
@@ -86,20 +91,23 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_products')
-              field: sku_id
+              arguments:
+                to: ref('dim_products')
+                field: sku_id
       - name: warehouse_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_warehouses')
-              field: warehouse_id
+              arguments:
+                to: ref('dim_warehouses')
+                field: warehouse_id
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - snapshot_date
-            - sku_id
-            - warehouse_id
+          arguments:
+            combination_of_columns:
+              - snapshot_date
+              - sku_id
+              - warehouse_id
 
   - name: fct_stockouts
     description: "Fato de eventos de ruptura, com receita perdida estimada."
@@ -112,8 +120,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_products')
-              field: sku_id
+              arguments:
+                to: ref('dim_products')
+                field: sku_id
       - name: estimated_lost_revenue
         tests:
           - dbt_utils.accepted_range:
@@ -132,11 +141,13 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_warehouses')
-              field: warehouse_id
+              arguments:
+                to: ref('dim_warehouses')
+                field: warehouse_id
       - name: store_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_stores')
-              field: store_id
+              arguments:
+                to: ref('dim_stores')
+                field: store_id
