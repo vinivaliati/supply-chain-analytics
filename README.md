@@ -17,7 +17,7 @@ Most portfolio data pipelines are built on top of a Kaggle CSV. This one generat
 - A theoretical vs. physical stock divergence that grows the less frequently a SKU is counted
 - Carriers with different on-time performance, affecting delivery to stores
 
-The goal was not just to move data from A to B, but to build a dataset where the numbers tell a real operational story — and then use dbt to reveal that story with tested, documented models.
+The goal was not just to move data from A to B, but to build a dataset where the numbers tell a real operational story and then use dbt to reveal that story with tested, documented models.
 
 ## Business context
 
@@ -48,13 +48,13 @@ Airflow orchestrates every step above as a single DAG: generate data → load to
 
 ## Key technical decisions
 
-**Physical stock projection ("islands and gaps").** Not every SKU is counted every day — only Curve A products are. For days without a physical count, `int_inventory_physical_projection` propagates the last known physical count forward and adjusts it by the theoretical stock's movement since that count, using a classic SQL windowing technique (`sum() over ... rows unbounded preceding` to build count groups, then `max() over (partition by ... count_group)` to carry the last known value forward). This is Postgres-compatible in place of `IGNORE NULLS`, which Postgres doesn't support.
+**Physical stock projection ("islands and gaps").** Not every SKU is counted every day only Curve A products are. For days without a physical count, `int_inventory_physical_projection` propagates the last known physical count forward and adjusts it by the theoretical stock's movement since that count, using a classic SQL windowing technique (`sum() over ... rows unbounded preceding` to build count groups, then `max() over (partition by ... count_group)` to carry the last known value forward). This is Postgres-compatible in place of `IGNORE NULLS`, which Postgres doesn't support.
 
-**ABC-curve-driven audit frequency.** Curve A (highest value) is counted daily, Curve B weekly, Curve C monthly — mirroring real warehouse cycle-counting policy. The generator seeds a shrinkage rate that compounds with days since the last count, so Curve C products show meaningfully larger physical-vs-theoretical divergence than Curve A, which is exactly the kind of insight this project is meant to surface.
+**ABC-curve-driven audit frequency.** Curve A (highest value) is counted daily, Curve B weekly, Curve C monthly mirroring real warehouse cycle-counting policy. The generator seeds a shrinkage rate that compounds with days since the last count, so Curve C products show meaningfully larger physical-vs-theoretical divergence than Curve A, which is exactly the kind of insight this project is meant to surface.
 
 **SCD Type 2 snapshot.** The ABC curve is fixed in this dataset, but a dbt snapshot (`products_abc_curve_snapshot`) still tracks it with `dbt_valid_from` / `dbt_valid_to`, demonstrating the technique for a value that would change in production.
 
-**Incremental model.** `stg_inventory_snapshots_incremental` only reprocesses rows newer than the last run's max date, instead of reprocessing the full 175k-row history every time — the right default for a fact table that grows daily in production.
+**Incremental model.** `stg_inventory_snapshots_incremental` only reprocesses rows newer than the last run's max date, instead of reprocessing the full 175k-row history every time the right default for a fact table that grows daily in production.
 
 **Two dbt environments, one project.** dbt runs locally (for fast iteration) and inside the Airflow worker container (for orchestrated runs), on different dbt-core versions due to Airflow's dependency constraints. Both point at the same Postgres instance via `host.docker.internal`, with credentials injected via `.env`/`env_file`, never hardcoded.
 
@@ -103,7 +103,7 @@ On the generated dataset (120 SKUs, 4 warehouses, 25 stores, 365 days):
 
 - **OTIF: 85.2%** (93.7% in-full, 86.1% on-time)
 - **Stockout rate: 6.3%** of orders, concentrated similarly across ABC curves
-- **Inventory divergence grows ~23x** from Curve A (daily counts) to Curve C (monthly counts) — direct evidence that count frequency drives inventory accuracy, not stockout rate
+- **Inventory divergence grows ~23x** from Curve A (daily counts) to Curve C (monthly counts) direct evidence that count frequency drives inventory accuracy, not stockout rate
 - **Transit on-time delivery: 90.9%**, varying by carrier reliability and route distance
 
 ## Challenges along the way
