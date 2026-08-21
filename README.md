@@ -93,6 +93,10 @@ dbt deps && dbt run && dbt snapshot && dbt test
 cd ../../airflow
 docker compose up -d
 # trigger the "generate_and_load_supply_chain_data" DAG at http://localhost:8080
+
+# 6. Launch the dashboard
+cd ../..
+SUPPLY_CHAIN_DB_HOST=localhost streamlit run streamlit_app/app.py
 ```
 
 See [docs/data_dictionary.md](docs/data_dictionary.md) for the full schema.
@@ -103,8 +107,18 @@ On the generated dataset (120 SKUs, 4 warehouses, 25 stores, 365 days):
 
 - **OTIF: 85.2%** (93.7% in-full, 86.1% on-time)
 - **Stockout rate: 6.3%** of orders, concentrated similarly across ABC curves
-- **Inventory divergence grows ~23x** from Curve A (daily counts) to Curve C (monthly counts) direct evidence that count frequency drives inventory accuracy, not stockout rate
+- **Inventory divergence grows ~23x** from Curve A (daily counts) to Curve C (monthly counts) — direct evidence that count frequency drives inventory accuracy, not stockout rate
 - **Transit on-time delivery: 90.9%**, varying by carrier reliability and route distance
+
+### Dashboard screenshots
+
+| OTIF | Stockouts |
+|---|---|
+| ![OTIF tab](docs/otif.png) | ![Stockouts tab](docs/ruptura.png) |
+
+| Inventory | Transit |
+|---|---|
+| ![Inventory tab](docs/estoque.png) | ![Transit tab](docs/transito.png) |
 
 ## Challenges along the way
 
@@ -115,11 +129,6 @@ Building this surfaced real integration problems, not just modeling ones:
 - dbt-core version mismatches between local (1.12) and Airflow's constrained environment (resolved by pinning `dbt-postgres==1.9.1`, which pulled a compatible dbt-core automatically)
 - A `click` library regression that broke Celery worker startup, fixed by pinning `click==8.2.1`
 - Postgres `DROP TABLE` failing on cascading dbt-created views, requiring `CASCADE`
-
-## Next steps
-
-- [ ] Streamlit dashboard consuming the dbt marts
-- [ ] dbt docs site generation and hosting
 
 ## License
 

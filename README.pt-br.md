@@ -93,6 +93,10 @@ dbt deps && dbt run && dbt snapshot && dbt test
 cd ../../airflow
 docker compose up -d
 # dispare a DAG "generate_and_load_supply_chain_data" em http://localhost:8080
+
+# 6. Abrir o dashboard
+cd ../..
+SUPPLY_CHAIN_DB_HOST=localhost streamlit run streamlit_app/app.py
 ```
 
 Veja [docs/data_dictionary.md](docs/data_dictionary.md) para o schema completo.
@@ -103,8 +107,18 @@ No dataset gerado (120 SKUs, 4 CDs, 25 lojas, 365 dias):
 
 - **OTIF: 85.2%** (93.7% in-full, 86.1% on-time)
 - **Taxa de ruptura: 6.3%** dos pedidos, distribuída de forma similar entre as curvas ABC
-- **Divergência de estoque ~23x maior** entre curva A (contagem diária) e curva C (contagem mensal) evidência direta de que a frequência de contagem afeta a acurácia de estoque, não a taxa de ruptura
+- **Divergência de estoque ~23x maior** entre curva A (contagem diária) e curva C (contagem mensal) — evidência direta de que a frequência de contagem afeta a acurácia de estoque, não a taxa de ruptura
 - **Entrega no prazo (trânsito): 90.9%**, variando por confiabilidade da transportadora e distância da rota
+
+### Prints do dashboard
+
+| OTIF | Ruptura |
+|---|---|
+| ![Aba OTIF](docs/otif.png) | ![Aba de ruptura](docs/ruptura.png) |
+
+| Estoque | Trânsito |
+|---|---|
+| ![Aba de estoque](docs/estoque.png) | ![Aba de trânsito](docs/transito.png) |
 
 ## Desafios ao longo do caminho
 
@@ -115,11 +129,6 @@ Construir isso revelou problemas reais de integração, não só de modelagem:
 - Divergência de versão do dbt-core entre o ambiente local (1.12) e o ambiente restrito do Airflow (resolvido fixando `dbt-postgres==1.9.1`, que puxou uma versão compatível de dbt-core automaticamente)
 - Uma regressão na lib `click` que quebrava a inicialização do worker do Celery, corrigida fixando `click==8.2.1`
 - `DROP TABLE` do Postgres falhando por causa de views do dbt em cascata, exigindo `CASCADE`
-
-## Próximos passos
-
-- [ ] Dashboard Streamlit consumindo os marts do dbt
-- [ ] Geração e hospedagem do site de documentação do dbt
 
 ## Licença
 
