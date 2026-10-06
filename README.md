@@ -44,7 +44,7 @@ Python generator → Postgres (raw) → dbt staging → dbt intermediate → dbt
                                    snapshot (SCD2)
 ```
 
-Airflow orchestrates every step above as a single DAG: generate data → load to Postgres → clean dbt artifacts → install dbt packages → run models → snapshot → test.
+Airflow orchestrates every step above as a single DAG: generate data → load to Postgres → clean dbt artifacts → install dbt packages → snapshot → run models → test.
 
 ## Key technical decisions
 
@@ -87,7 +87,7 @@ python -m data_generator.load_to_postgres
 
 # 4. Run dbt
 cd dbt/supply_chain
-dbt deps && dbt run && dbt snapshot && dbt test
+dbt deps && dbt snapshot && dbt run && dbt test
 
 # 5. Or run the whole thing via Airflow
 cd ../../airflow
