@@ -51,5 +51,5 @@ select
     , was_shipped
     , is_in_full
     , is_on_time
-    , (is_in_full or is_on_time) as is_otif
+    , (is_in_full and is_on_time) as is_otif
 from flagged
