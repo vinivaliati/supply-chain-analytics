@@ -27,6 +27,8 @@ jobs:
       SUPPLY_CHAIN_DB_HOST: localhost
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # o passo do dbt compara os arquivos do PR com a branch base
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -38,12 +40,19 @@ jobs:
       - run: dbt deps
         working-directory: dbt/supply_chain
       - run: sqlfluff lint dbt/supply_chain/models
-      # Em PR, constroi so o que mudou (e seus pais e filhos), comparando com o
-      # manifest da main publicado junto com a documentacao. Sem manifest, build completo.
+      # Em PR que so mexe em dbt/supply_chain, constroi so o que mudou (com pais e filhos),
+      # comparando com o manifest da main publicado junto com a documentacao.
+      # Qualquer outro caso (gerador, requirements, sem manifest) faz o build completo.
       - name: dbt build
         working-directory: dbt/supply_chain
         run: |
+          # verdadeiro so se todos os arquivos alterados (um por linha no stdin) estao em dbt/supply_chain/
+          only_dbt_changed() {
+            files=$(cat)
+            [ -n "$files" ] && ! printf '%s\n' "$files" | grep -qv '^dbt/supply_chain/'
+          }
           if [ "${{ github.event_name }}" = "pull_request" ] && \
+             git diff --name-only "origin/${{ github.base_ref }}...HEAD" | only_dbt_changed && \
              curl -fsS "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/manifest.json" \
                -o /tmp/state/manifest.json --create-dirs; then
             dbt build --select "+state:modified+" --state /tmp/state
