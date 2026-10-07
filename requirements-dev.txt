@@ -1,6 +1,6 @@
 dbt-core==1.12.0
 dbt-postgres==1.11.0
-sqlfluff
-sqlfluff-templater-dbt
-ruff
+sqlfluff==4.4.0
+sqlfluff-templater-dbt==4.4.0
+ruff==0.16.10
 dbt-metricflow==0.15.0
