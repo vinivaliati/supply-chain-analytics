@@ -22,7 +22,7 @@ Quatro temas de negócio: **OTIF**, **ruptura de estoque**, **acurácia de inven
 | `dbt/supply_chain/profiles.yml` | Profile único do dbt (local, Airflow e CI). Versionado porque lê tudo de `env_var`; nunca escrever credencial nele. |
 | `airflow/` | `Dockerfile`, compose do Airflow 2.9.1 (CeleryExecutor) e a DAG em `dags/generate_and_load_data_dag.py`. |
 | `streamlit_app/` | Dashboard. `db.py` conecta no Postgres e lê o schema `dbt_dev_marts`; uma aba por arquivo em `tabs/`. |
-| `docs/` | `architecture.svg`, `data_dictionary.md` e prints do dashboard. |
+| `docs/` | `architecture.svg` e prints do dashboard. O dicionário de dados é o site do dbt (https://vinivaliati.github.io/supply-chain-analytics/), gerado pelo CI a partir das descrições nos YAMLs. |
 
 ## Comandos
 
@@ -68,6 +68,7 @@ Ordem da DAG: `generate_data → load_data_to_postgres → dbt_clean → dbt_dep
 Detalhes que costumam causar erro:
 
 - `dim_products` faz `ref` no snapshot `products_abc_curve_snapshot`, por isso usamos `dbt build`, que resolve a ordem pelo grafo. Com comandos separados, `dbt snapshot` tem de vir antes de `dbt run`.
+- `fct_inventory_daily` é incremental: coluna nova entra vazia nas linhas já carregadas (`append_new_columns` não preenche o histórico). Depois de adicionar coluna a ela, rodar `dbt build --full-refresh --select fct_inventory_daily`; colunas calculadas devem ter teste `not_null` para o build acusar o esquecimento.
 - O loader recria as tabelas `raw` com `DROP ... CASCADE`, o que derruba as views de staging/intermediate. Depois de recarregar, rode `make dbt-build` de novo.
 - Dentro do Airflow o host do warehouse é `host.docker.internal` (fixado na DAG); no `.env` é `localhost`.
 - Local (dbt 1.12) e Airflow (dbt 1.9) compartilham `dbt/supply_chain/target/` em formatos incompatíveis: erro `Not a directory` no snapshot se resolve apagando `target/` (o `make dbt-build` e a DAG já fazem isso).
