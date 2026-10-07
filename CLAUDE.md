@@ -68,6 +68,7 @@ Ordem da DAG: `generate_data → load_data_to_postgres → dbt_clean → dbt_dep
 Detalhes que costumam causar erro:
 
 - `dim_products` faz `ref` no snapshot `products_abc_curve_snapshot`, por isso usamos `dbt build`, que resolve a ordem pelo grafo. Com comandos separados, `dbt snapshot` tem de vir antes de `dbt run`.
+- `fct_inventory_daily` é incremental: coluna nova entra vazia nas linhas já carregadas (`append_new_columns` não preenche o histórico). Depois de adicionar coluna a ela, rodar `dbt build --full-refresh --select fct_inventory_daily`; colunas calculadas devem ter teste `not_null` para o build acusar o esquecimento.
 - O loader recria as tabelas `raw` com `DROP ... CASCADE`, o que derruba as views de staging/intermediate. Depois de recarregar, rode `make dbt-build` de novo.
 - Dentro do Airflow o host do warehouse é `host.docker.internal` (fixado na DAG); no `.env` é `localhost`.
 - Local (dbt 1.12) e Airflow (dbt 1.9) compartilham `dbt/supply_chain/target/` em formatos incompatíveis: erro `Not a directory` no snapshot se resolve apagando `target/` (o `make dbt-build` e a DAG já fazem isso).

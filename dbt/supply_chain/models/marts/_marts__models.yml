@@ -293,6 +293,8 @@ models:
       - name: physical_vs_theoretical_divergence
         data_type: integer
         description: "Físico projetado menos teórico; base da métrica de acurácia de estoque."
+        tests:
+          - not_null
       - name: coverage_days_physical
         data_type: numeric
         description: "Dias de cobertura pelo estoque físico projetado."
