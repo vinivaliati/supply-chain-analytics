@@ -29,9 +29,10 @@ with sales_orders as (
         , inventory_coverage.is_below_reorder_point
     from stockouts
     left join inventory_coverage
-        on stockouts.sku_id = inventory_coverage.sku_id
-        and stockouts.warehouse_id = inventory_coverage.warehouse_id
-        and stockouts.order_date = inventory_coverage.snapshot_date
+        on
+            stockouts.sku_id = inventory_coverage.sku_id
+            and stockouts.warehouse_id = inventory_coverage.warehouse_id
+            and stockouts.order_date = inventory_coverage.snapshot_date
 )
 select
     order_id

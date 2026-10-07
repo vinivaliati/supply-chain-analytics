@@ -11,14 +11,15 @@ import pandas as pd
 from faker import Faker
 
 from data_generator.config.settings import (
-    N_SUPPLIERS,
-    N_PRODUCTS,
-    N_WAREHOUSES,
-    N_STORES,
-    N_CARRIERS,
     ABC_CURVE_DISTRIBUTION,
-    REGIONS,
+    N_CARRIERS,
+    N_PRODUCTS,
+    N_STORES,
+    N_SUPPLIERS,
+    N_WAREHOUSES,
     PRODUCT_CATEGORIES,
+    RANDOM_SEED,
+    REGIONS,
 )
 
 fake = Faker("pt_BR")
@@ -123,6 +124,7 @@ def generate_carriers(rng: np.random.Generator) -> pd.DataFrame:
 
 def generate_all_dimensions(rng: np.random.Generator) -> dict[str, pd.DataFrame]:
     """Gera todas as dimensões e retorna um dicionário {nome_tabela: dataframe}."""
+    fake.seed_instance(RANDOM_SEED)  # nomes reprodutíveis entre execuções
     suppliers = generate_suppliers(rng)
     products = generate_products(rng, supplier_ids=suppliers["supplier_id"].tolist())
     warehouses = generate_warehouses(rng)

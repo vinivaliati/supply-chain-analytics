@@ -1,0 +1,16 @@
+[sqlfluff]
+dialect = postgres
+templater = dbt
+max_line_length = 140
+# LT08: o projeto encadeia CTEs com ", nome as (" logo apos o ")". RF04: year/month/quarter em dim_date. ST06: reordenar colunas muda o contrato dos marts.
+exclude_rules = LT08, RF04, ST06
+
+[sqlfluff:templater:dbt]
+project_dir = dbt/supply_chain
+profiles_dir = dbt/supply_chain
+
+[sqlfluff:layout:type:comma]
+line_position = leading
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower

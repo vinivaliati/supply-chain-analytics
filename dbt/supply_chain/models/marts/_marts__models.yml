@@ -2,67 +2,158 @@ version: 2
 
 models:
   - name: dim_date
-    description: "Dimensão de datas cobrindo o período de simulação (2024), com atributos de calendário."
+    description: "Dimensão de datas cobrindo o período de simulação (2026), usada também como time spine das métricas."
+    time_spine:
+      standard_granularity_column: date_day
     columns:
       - name: date_day
+        data_type: date
+        granularity: day
+        description: "Dia do calendário."
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
+      - name: year
+        data_type: numeric
+        description: "Ano."
+      - name: quarter
+        data_type: numeric
+        description: "Trimestre (1 a 4)."
+      - name: month
+        data_type: numeric
+        description: "Mês (1 a 12)."
 
   - name: dim_products
     description: "Dimensão de produtos, com a curva ABC atual vinda do snapshot SCD2."
     columns:
       - name: sku_id
+        data_type: integer
+        description: "Identificador do produto (SKU)."
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
+      - name: sku_name
+        data_type: string
+        description: "Nome do produto."
+      - name: category
+        data_type: string
+        description: "Categoria do produto."
       - name: supplier_id
+        data_type: integer
+        description: "Fornecedor principal."
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_suppliers')
                 field: supplier_id
+      - name: unit_cost
+        data_type: numeric
+        description: "Custo unitário, em reais."
+      - name: weight_kg
+        data_type: numeric
+        description: "Peso unitário, em kg."
+      - name: abc_curve
+        data_type: string
+        description: "Curva ABC (A, B ou C); define a frequência de contagem física."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C']
 
   - name: dim_suppliers
     description: "Dimensão de fornecedores."
     columns:
       - name: supplier_id
+        data_type: integer
+        description: "Identificador do fornecedor."
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
+      - name: supplier_name
+        data_type: string
+        description: "Nome do fornecedor."
+      - name: region
+        data_type: string
+        description: "Região do fornecedor."
+      - name: reliability_score
+        data_type: numeric
+        description: "Probabilidade de entrega no prazo e completa."
+      - name: promised_lead_time_days
+        data_type: integer
+        description: "Lead time contratual, em dias."
 
   - name: dim_warehouses
     description: "Dimensão de centros de distribuição."
     columns:
       - name: warehouse_id
+        data_type: integer
+        description: "Identificador do centro de distribuição (CD)."
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
+      - name: warehouse_name
+        data_type: string
+        description: "Nome do CD."
+      - name: region
+        data_type: string
+        description: "Região do CD."
+      - name: capacity_units
+        data_type: integer
+        description: "Capacidade de armazenagem, em unidades."
 
   - name: dim_stores
     description: "Dimensão de lojas, com o CD abastecedor já resolvido."
     columns:
       - name: store_id
+        data_type: integer
+        description: "Identificador da loja."
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
+      - name: store_name
+        data_type: string
+        description: "Nome da loja."
+      - name: region
+        data_type: string
+        description: "Região da loja."
       - name: warehouse_id
+        data_type: integer
+        description: "CD abastecedor."
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_warehouses')
                 field: warehouse_id
+      - name: warehouse_name
+        data_type: string
+        description: "Nome do CD abastecedor."
 
   - name: fct_otif
     description: "Fato de OTIF: um registro por pedido de venda, com flags de in_full, on_time e otif."
     columns:
       - name: order_id
+        data_type: integer
+        description: "Identificador do pedido de venda."
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
       - name: sku_id
+        data_type: integer
+        description: "Produto pedido."
         tests:
           - not_null
           - relationships:
@@ -70,6 +161,8 @@ models:
                 to: ref('dim_products')
                 field: sku_id
       - name: store_id
+        data_type: integer
+        description: "Loja que fez o pedido."
         tests:
           - not_null
           - relationships:
@@ -77,17 +170,86 @@ models:
                 to: ref('dim_stores')
                 field: store_id
       - name: warehouse_id
+        data_type: integer
+        description: "CD que atende o pedido."
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_warehouses')
                 field: warehouse_id
+      - name: order_date
+        data_type: date
+        description: "Data do pedido."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: requested_qty
+        data_type: integer
+        description: "Quantidade pedida."
+      - name: fulfilled_qty
+        data_type: integer
+        description: "Quantidade atendida; menor que a pedida quando há ruptura."
+      - name: fill_rate
+        data_type: numeric
+        description: "Fração atendida do pedido (0 a 1)."
+      - name: promised_delivery_date
+        data_type: date
+        description: "Data de entrega prometida à loja."
+      - name: shipment_id
+        data_type: integer
+        description: "Envio do pedido; nulo quando nada foi atendido."
+      - name: carrier_id
+        data_type: integer
+        description: "Transportadora do envio."
+      - name: ship_date
+        data_type: date
+        description: "Data de expedição."
+      - name: actual_delivery_date
+        data_type: date
+        description: "Data real de entrega, vinda do envio."
+      - name: distance_km
+        data_type: numeric
+        description: "Distância da rota CD → loja, em km."
+      - name: was_shipped
+        data_type: boolean
+        description: "Se o pedido gerou envio."
+        tests:
+          - not_null
+      - name: is_in_full
+        data_type: boolean
+        description: "Quantidade atendida igual ou maior que a pedida."
+        tests:
+          - not_null
+      - name: is_on_time
+        data_type: boolean
+        description: "Entregue até a data prometida; falso quando não houve envio."
+        tests:
+          - not_null
+      - name: is_otif
+        data_type: boolean
+        description: "Entregue no prazo e na quantidade pedida."
+        tests:
+          - not_null
 
   - name: fct_inventory_daily
-    description: "Fato de estoque diário por SKU/CD, com cobertura em dias e flags de risco."
+    description: "Fato de estoque diário por SKU/CD, com cobertura em dias e flags de risco. Incremental por data de snapshot."
     columns:
+      - name: snapshot_date
+        data_type: date
+        description: "Dia da fotografia do estoque."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
       - name: sku_id
+        data_type: integer
+        description: "Produto."
         tests:
           - not_null
           - relationships:
@@ -95,12 +257,57 @@ models:
                 to: ref('dim_products')
                 field: sku_id
       - name: warehouse_id
+        data_type: integer
+        description: "Centro de distribuição."
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_warehouses')
                 field: warehouse_id
+      - name: theoretical_stock
+        data_type: integer
+        description: "Saldo do sistema, sempre calculado."
+      - name: physical_stock_projected
+        data_type: integer
+        description: "Estoque físico: a última contagem ajustada pelo movimento do teórico desde então."
+      - name: safety_stock
+        data_type: integer
+        description: "Estoque de segurança."
+      - name: reorder_point
+        data_type: integer
+        description: "Ponto de pedido."
+      - name: in_transit_qty
+        data_type: integer
+        description: "Comprado e ainda não recebido."
+      - name: avg_daily_demand
+        data_type: numeric
+        description: "Demanda média diária."
+      - name: curve
+        data_type: string
+        description: "Curva ABC do produto."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C']
+      - name: physical_vs_theoretical_divergence
+        data_type: integer
+        description: "Físico projetado menos teórico; base da métrica de acurácia de estoque."
+      - name: coverage_days_physical
+        data_type: numeric
+        description: "Dias de cobertura pelo estoque físico projetado."
+      - name: coverage_days_theoretical
+        data_type: numeric
+        description: "Dias de cobertura pelo estoque teórico."
+      - name: is_below_safety_stock
+        data_type: boolean
+        description: "Físico projetado no estoque de segurança ou abaixo."
+      - name: is_below_reorder_point
+        data_type: boolean
+        description: "Físico projetado no ponto de pedido ou abaixo."
+      - name: is_stockout
+        data_type: boolean
+        description: "Físico projetado zerado."
     tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -110,20 +317,100 @@ models:
               - warehouse_id
 
   - name: fct_stockouts
-    description: "Fato de eventos de ruptura, com receita perdida estimada."
+    description: "Fato de eventos de ruptura (pedido atendido parcialmente ou não atendido), com receita perdida estimada."
     columns:
       - name: order_id
+        data_type: integer
+        description: "Pedido de venda com ruptura."
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_otif')
+                field: order_id
       - name: sku_id
+        data_type: integer
+        description: "Produto pedido."
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_products')
                 field: sku_id
+      - name: store_id
+        data_type: integer
+        description: "Loja que fez o pedido."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_stores')
+                field: store_id
+      - name: warehouse_id
+        data_type: integer
+        description: "CD que deveria atender o pedido."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_warehouses')
+                field: warehouse_id
+      - name: order_date
+        data_type: date
+        description: "Data do pedido."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: requested_qty
+        data_type: integer
+        description: "Quantidade pedida."
+      - name: fulfilled_qty
+        data_type: integer
+        description: "Quantidade atendida."
+      - name: lost_units
+        data_type: integer
+        description: "Unidades não atendidas."
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: is_total_stockout
+        data_type: boolean
+        description: "Nada do pedido foi atendido."
+        tests:
+          - not_null
+      - name: stock_at_order_date
+        data_type: integer
+        description: "Físico projetado no dia do pedido."
+      - name: theoretical_stock_at_order_date
+        data_type: integer
+        description: "Teórico no dia do pedido."
+      - name: curve
+        data_type: string
+        description: "Curva ABC do produto."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C']
+      - name: is_below_safety_stock
+        data_type: boolean
+        description: "Estoque no nível de segurança ou abaixo no dia do pedido."
+      - name: is_below_reorder_point
+        data_type: boolean
+        description: "Estoque no ponto de pedido ou abaixo no dia do pedido."
+      - name: unit_cost
+        data_type: numeric
+        description: "Custo unitário do produto."
       - name: estimated_lost_revenue
+        data_type: numeric
+        description: "Unidades perdidas vezes o custo unitário."
         tests:
           - dbt_utils.accepted_range:
               arguments:
@@ -134,10 +421,33 @@ models:
     description: "Fato de desempenho de transporte (CD -> loja), por transportadora e rota."
     columns:
       - name: shipment_id
+        data_type: integer
+        description: "Identificador do envio."
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
+      - name: order_id
+        data_type: integer
+        description: "Pedido de venda transportado."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_otif')
+                field: order_id
+      - name: carrier_id
+        data_type: integer
+        description: "Transportadora."
+        tests:
+          - not_null
+      - name: carrier_name
+        data_type: string
+        description: "Nome da transportadora."
       - name: warehouse_id
+        data_type: integer
+        description: "CD de origem."
         tests:
           - not_null
           - relationships:
@@ -145,9 +455,111 @@ models:
                 to: ref('dim_warehouses')
                 field: warehouse_id
       - name: store_id
+        data_type: integer
+        description: "Loja de destino."
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_stores')
                 field: store_id
+      - name: ship_date
+        data_type: date
+        description: "Data de expedição."
+      - name: promised_delivery_date
+        data_type: date
+        description: "Data de entrega prometida."
+      - name: actual_delivery_date
+        data_type: date
+        description: "Data real de entrega."
+      - name: distance_km
+        data_type: numeric
+        description: "Distância da rota, em km."
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: is_on_time
+        data_type: boolean
+        description: "Entregue até a data prometida."
+        tests:
+          - not_null
+      - name: delay_days
+        data_type: integer
+        description: "Dias entre a data prometida e a entrega; negativo quando adiantou."
+
+  - name: fct_supplier_otif
+    description: "Fato de OTIF de fornecedor: um registro por pedido de compra, com flags de in_full, on_time e otif."
+    columns:
+      - name: po_id
+        data_type: integer
+        description: "Identificador do pedido de compra."
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+      - name: supplier_id
+        data_type: integer
+        description: "Fornecedor do pedido."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_suppliers')
+                field: supplier_id
+      - name: sku_id
+        data_type: integer
+        description: "Produto comprado."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: sku_id
+      - name: warehouse_id
+        data_type: integer
+        description: "CD que recebe a compra."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_warehouses')
+                field: warehouse_id
+      - name: order_date
+        data_type: date
+        description: "Data do pedido de compra."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: promised_date
+        data_type: date
+        description: "Data de entrega prometida pelo fornecedor."
+      - name: received_date
+        data_type: date
+        description: "Data real de recebimento."
+      - name: ordered_qty
+        data_type: integer
+        description: "Quantidade pedida."
+      - name: received_qty
+        data_type: integer
+        description: "Quantidade recebida; menor que a pedida quando o fornecedor entrega incompleto."
+      - name: is_in_full
+        data_type: boolean
+        description: "Recebido na quantidade pedida ou mais."
+        tests:
+          - not_null
+      - name: is_on_time
+        data_type: boolean
+        description: "Recebido até a data prometida."
+        tests:
+          - not_null
+      - name: is_otif
+        data_type: boolean
+        description: "Recebido no prazo e na quantidade pedida."
+        tests:
+          - not_null

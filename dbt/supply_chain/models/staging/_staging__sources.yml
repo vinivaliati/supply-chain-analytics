@@ -23,6 +23,10 @@ sources:
             tests:
               - unique
               - not_null
+          - name: reliability_score
+            description: "Probabilidade de entrega no prazo e completa."
+          - name: promised_lead_time_days
+            description: "Lead time contratual, em dias."
 
       - name: products
         description: "Catálogo de produtos, com curva ABC fixa e fornecedor principal."
@@ -31,6 +35,10 @@ sources:
             tests:
               - unique
               - not_null
+          - name: supplier_id
+            description: "Fornecedor principal."
+          - name: abc_curve
+            description: "A / B / C, fixo; define a frequência de contagem física."
 
       - name: warehouses
         description: "Centros de distribuição."
@@ -47,6 +55,8 @@ sources:
             tests:
               - unique
               - not_null
+          - name: warehouse_id
+            description: "CD abastecedor."
 
       - name: carriers
         description: "Transportadoras responsáveis pelo trânsito CD -> loja."
@@ -63,6 +73,8 @@ sources:
             tests:
               - unique
               - not_null
+          - name: received_qty
+            description: "Pode ser menor que ordered_qty (falha de in-full)."
 
       - name: sales_orders
         description: "Pedidos de venda (demanda de lojas), com fulfilled_qty resolvido pelo motor de estoque."
@@ -71,6 +83,8 @@ sources:
             tests:
               - unique
               - not_null
+          - name: fulfilled_qty
+            description: "Resolvido pelo motor de estoque; pode ser menor que requested_qty."
 
       - name: shipments
         description: "Envios entre CD e loja, fonte de verdade para OTD de transporte."
@@ -79,6 +93,8 @@ sources:
             tests:
               - unique
               - not_null
+          - name: actual_delivery_date
+            description: "Fonte de verdade para a entrega no prazo."
 
       - name: inventory_snapshots
         description: "Snapshot diário de estoque por SKU/CD (teórico sempre, físico condicional à curva ABC)."
@@ -86,6 +102,16 @@ sources:
           - name: snapshot_date
             tests:
               - not_null
+          - name: theoretical_stock
+            description: "Saldo do sistema, sempre calculado."
+          - name: physical_stock
+            description: "Preenchido só nos dias de contagem física."
+          - name: in_transit_qty
+            description: "Comprado e ainda não recebido."
+          - name: curve
+            description: "Curva ABC, desnormalizada de products."
+          - name: is_counted
+            description: "Se houve contagem física nesse dia."
 
       - name: physical_counts
         description: "Eventos de contagem física, frequência determinada pela curva ABC do produto."
@@ -94,3 +120,5 @@ sources:
             tests:
               - unique
               - not_null
+          - name: count_type
+            description: "daily / weekly / monthly, conforme a curva ABC."

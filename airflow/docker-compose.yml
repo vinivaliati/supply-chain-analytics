@@ -79,7 +79,6 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/../data_generator:/opt/airflow/data_generator
     - ${AIRFLOW_PROJ_DIR:-.}/../dbt/supply_chain:/opt/airflow/dbt/supply_chain
-    - ${AIRFLOW_PROJ_DIR:-.}/../dbt/airflow_profile/profiles.yml:/home/airflow/.dbt/profiles.yml
   user: "${AIRFLOW_UID:-50000}:0"
   env_file:
     - ../.env

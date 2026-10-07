@@ -5,10 +5,10 @@ with source as (
 )
 , renamed as (
     select
-        warehouse_id::integer as warehouse_id
-        , warehouse_name::text as warehouse_name
-        , region::text as region
-        , capacity_units::integer as capacity_units
+        cast(warehouse_id as {{ dbt.type_int() }}) as warehouse_id
+        , cast(warehouse_name as {{ dbt.type_string() }}) as warehouse_name
+        , cast(region as {{ dbt.type_string() }}) as region
+        , cast(capacity_units as {{ dbt.type_int() }}) as capacity_units
     from source
 )
 , deduped as (

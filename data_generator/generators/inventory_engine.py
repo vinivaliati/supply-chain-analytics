@@ -13,18 +13,11 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-from data_generator.config.settings import START_DATE, END_DATE
-
-
-def _initial_stock_estimate(rng: np.random.Generator) -> int:
-    """Estoque inicial arbitrário por sku/warehouse, no primeiro dia da simulação."""
-    return int(rng.integers(100, 600))
+from data_generator.config.settings import END_DATE, START_DATE
 
 
 def run_inventory_engine(
     rng: np.random.Generator,
-    products: pd.DataFrame,
-    warehouses: pd.DataFrame,
     purchase_orders: pd.DataFrame,
     sales_orders: pd.DataFrame,
     safety_stock_days: int = 5,
@@ -71,7 +64,7 @@ def run_inventory_engine(
         safety_stock = int(avg_daily_demand * safety_stock_days)
         reorder_point = int(safety_stock * 1.5)
 
-        stock = _initial_stock_estimate(rng)
+        stock = int(rng.integers(100, 600))  # estoque inicial arbitrário
 
         receipts_by_day = pos_key.groupby(pos_key["received_date"].dt.date)["received_qty"].sum()
         orders_by_day = sos_key.groupby(sos_key["order_date"].dt.date)

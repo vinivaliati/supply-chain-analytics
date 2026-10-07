@@ -5,11 +5,11 @@ with source as (
 )
 , renamed as (
     select
-        supplier_id::integer as supplier_id
-        , supplier_name::text as supplier_name
-        , region::text as region
-        , reliability_score::numeric(5,3) as reliability_score
-        , promised_lead_time_days::integer as promised_lead_time_days
+        cast(supplier_id as {{ dbt.type_int() }}) as supplier_id
+        , cast(supplier_name as {{ dbt.type_string() }}) as supplier_name
+        , cast(region as {{ dbt.type_string() }}) as region
+        , cast(reliability_score as {{ dbt.type_numeric() }}) as reliability_score
+        , cast(promised_lead_time_days as {{ dbt.type_int() }}) as promised_lead_time_days
     from source
 )
 , deduped as (

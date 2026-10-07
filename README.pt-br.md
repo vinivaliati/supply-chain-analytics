@@ -1,5 +1,7 @@
 # Pipeline de Analytics de Supply Chain
 
+[![ci](https://github.com/vinivaliati/supply-chain-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/vinivaliati/supply-chain-analytics/actions/workflows/ci.yml)
+
 *[Read in English](README.md)*
 
 Um projeto de portfólio de engenharia de dados ponta a ponta simulando a cadeia de suprimentos de uma empresa de distribuição: geração de dados sintéticos, orquestração com Airflow, transformação com dbt, tudo rodando em Docker.
@@ -44,7 +46,7 @@ Gerador Python → Postgres (raw) → dbt staging → dbt intermediate → dbt m
                                    snapshot (SCD2)
 ```
 
-O Airflow orquestra cada etapa acima numa única DAG: gerar dados → carregar no Postgres → limpar artefatos do dbt → instalar pacotes do dbt → snapshot → rodar os models → testes.
+O Airflow orquestra cada etapa acima numa única DAG: gerar dados → carregar no Postgres → limpar artefatos do dbt → instalar pacotes do dbt → `dbt build` (snapshot, models e testes, na ordem das dependências).
 
 ## Decisões técnicas importantes
 
@@ -54,7 +56,11 @@ O Airflow orquestra cada etapa acima numa única DAG: gerar dados → carregar n
 
 **Snapshot SCD Tipo 2.** A curva ABC é fixa nesse dataset, mas um snapshot do dbt (`products_abc_curve_snapshot`) ainda rastreia ela com `dbt_valid_from` / `dbt_valid_to`, demonstrando a técnica para um valor que mudaria em produção.
 
-**Modelo incremental.** `stg_inventory_snapshots_incremental` só reprocessa linhas mais novas que a última data máxima processada, em vez de reprocessar as 175 mil linhas de histórico toda vez o padrão correto para uma tabela de fatos que cresce diariamente em produção.
+**Modelo incremental.** `fct_inventory_daily`, a maior tabela (175 mil linhas), é incremental: cada execução só processa as datas de snapshot mais novas que a última já carregada, em vez de reconstruir todo o histórico — o padrão correto para uma tabela de fatos que cresce diariamente em produção. Depois de mudar o gerador, reconstrua com `dbt build --full-refresh`.
+
+**Contratos de dados e testes unitários.** Todo mart tem contrato do dbt aplicado (nomes e tipos de coluna declarados no YAML; divergência quebra o build), além de testes de integridade referencial dos fatos para as dimensões. As regras de negócio da camada intermediate (decomposição do OTIF, projeção do estoque físico) e o fato de OTIF de fornecedor são cobertos por testes unitários do dbt com dados escritos à mão.
+
+**Camada semântica.** Nove métricas são definidas uma única vez no MetricFlow (`models/marts/_semantic_models.yml`) sobre os marts: `otif_rate`, `in_full_rate`, `on_time_rate`, `stockout_rate`, `lost_revenue`, `inventory_divergence_avg`, `coverage_days_avg`, `transit_on_time_rate` e `supplier_otif_rate`. Exemplo: `mf query --metrics otif_rate --group-by metric_time__month`.
 
 **Dois ambientes dbt, um projeto.** O dbt roda localmente (para iteração rápida) e dentro do container worker do Airflow (para execuções orquestradas), em versões diferentes do dbt-core por causa de restrições de dependência do Airflow. Ambos apontam para a mesma instância do Postgres via `host.docker.internal`, com credenciais injetadas via `.env`/`env_file`, nunca hardcoded.
 
@@ -74,9 +80,12 @@ supply-chain-analytics/
 Pré-requisitos: Docker Desktop, WSL2 (Windows) ou um shell Linux/Mac, Python 3.11+.
 
 ```bash
+# 0. Credenciais (lidas pelo loader, pelo dbt, pelo Makefile e pelo dashboard)
+cp .env.example .env
+
 # 1. Gerar os dados sintéticos
 python -m venv .venv && source .venv/bin/activate
-pip install -r data_generator/requirements.txt
+pip install -r data_generator/requirements.txt -r requirements-dev.txt -r streamlit_app/requirements.txt
 python -m data_generator.main
 
 # 2. Subir o Postgres
@@ -85,18 +94,15 @@ docker compose up -d
 # 3. Carregar os dados
 python -m data_generator.load_to_postgres
 
-# 4. Rodar o dbt
-cd dbt/supply_chain
-dbt deps && dbt snapshot && dbt run && dbt test
+# 4. Rodar o dbt (o Makefile exporta o .env e roda dbt deps && dbt build)
+make dbt-build
 
 # 5. Ou rodar tudo via Airflow
-cd ../../airflow
-docker compose up -d
+docker compose -f airflow/docker-compose.yml up -d
 # dispare a DAG "generate_and_load_supply_chain_data" em http://localhost:8080
 
 # 6. Abrir o dashboard
-cd ../..
-SUPPLY_CHAIN_DB_HOST=localhost streamlit run streamlit_app/app.py
+streamlit run streamlit_app/app.py
 ```
 
 Veja [docs/data_dictionary.md](docs/data_dictionary.md) para o schema completo.

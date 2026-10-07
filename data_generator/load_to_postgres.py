@@ -6,12 +6,13 @@ Usa SQLAlchemy apenas para abrir a conexão; a carga em si é feita via
 execução de SQL (CREATE TABLE + COPY), evitando incompatibilidades do
 pandas.to_sql entre diferentes versões de SQLAlchemy (1.4 vs 2.0).
 """
-import os
 import glob
 import io
+import os
+
 import pandas as pd
-from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+from sqlalchemy import create_engine, text
 
 load_dotenv()
 
