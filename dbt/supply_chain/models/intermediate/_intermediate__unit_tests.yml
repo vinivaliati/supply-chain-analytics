@@ -1,0 +1,49 @@
+unit_tests:
+  - name: otif_decompoe_in_full_e_on_time
+    description: "OTIF exige quantidade completa e entrega ate a data prometida; pedido sem envio nao e on time."
+    model: int_order_fulfillment
+    given:
+      - input: ref('stg_sales_orders')
+        rows:
+          - {order_id: 1, requested_qty: 10, fulfilled_qty: 10, promised_delivery_date: 2026-01-10}
+          - {order_id: 2, requested_qty: 10, fulfilled_qty: 6, promised_delivery_date: 2026-01-10}
+          - {order_id: 3, requested_qty: 10, fulfilled_qty: 10, promised_delivery_date: 2026-01-10}
+          - {order_id: 4, requested_qty: 10, fulfilled_qty: 0, promised_delivery_date: 2026-01-10}
+          - {order_id: 5, requested_qty: 10, fulfilled_qty: 10, promised_delivery_date: 2026-01-10}
+      - input: ref('stg_shipments')
+        rows:
+          - {shipment_id: 1, order_id: 1, actual_delivery_date: 2026-01-09}
+          - {shipment_id: 2, order_id: 2, actual_delivery_date: 2026-01-09}
+          - {shipment_id: 3, order_id: 3, actual_delivery_date: 2026-01-12}
+          - {shipment_id: 5, order_id: 5, actual_delivery_date: 2026-01-10}
+    expect:
+      rows:
+        - {order_id: 1, is_in_full: true, is_on_time: true, is_otif: true, was_shipped: true}
+        - {order_id: 2, is_in_full: false, is_on_time: true, is_otif: false, was_shipped: true}
+        - {order_id: 3, is_in_full: true, is_on_time: false, is_otif: false, was_shipped: true}
+        - {order_id: 4, is_in_full: false, is_on_time: false, is_otif: false, was_shipped: false}
+        - {order_id: 5, is_in_full: true, is_on_time: true, is_otif: true, was_shipped: true}
+
+  - name: projecao_fisica_carrega_ultima_contagem
+    description: "Nos dias sem contagem, o fisico projetado e a ultima contagem mais o delta do teorico, nunca negativo."
+    model: int_inventory_physical_projection
+    given:
+      - input: ref('stg_inventory_snapshots')
+        rows:
+          # sku 1: contado no dia 1, depois segue o delta do teorico
+          - {snapshot_date: 2026-01-01, sku_id: 1, warehouse_id: 1, theoretical_stock: 100, physical_stock: 95, is_counted: true}
+          - {snapshot_date: 2026-01-02, sku_id: 1, warehouse_id: 1, theoretical_stock: 90, physical_stock: null, is_counted: false}
+          - {snapshot_date: 2026-01-03, sku_id: 1, warehouse_id: 1, theoretical_stock: 120, physical_stock: null, is_counted: false}
+          # sku 2: nunca contado, usa o teorico
+          - {snapshot_date: 2026-01-01, sku_id: 2, warehouse_id: 1, theoretical_stock: 50, physical_stock: null, is_counted: false}
+          # sku 3: projecao negativa e truncada em zero
+          - {snapshot_date: 2026-01-01, sku_id: 3, warehouse_id: 1, theoretical_stock: 100, physical_stock: 5, is_counted: true}
+          - {snapshot_date: 2026-01-02, sku_id: 3, warehouse_id: 1, theoretical_stock: 10, physical_stock: null, is_counted: false}
+    expect:
+      rows:
+        - {snapshot_date: 2026-01-01, sku_id: 1, physical_stock_projected: 95}
+        - {snapshot_date: 2026-01-02, sku_id: 1, physical_stock_projected: 85}
+        - {snapshot_date: 2026-01-03, sku_id: 1, physical_stock_projected: 115}
+        - {snapshot_date: 2026-01-01, sku_id: 2, physical_stock_projected: 50}
+        - {snapshot_date: 2026-01-01, sku_id: 3, physical_stock_projected: 5}
+        - {snapshot_date: 2026-01-02, sku_id: 3, physical_stock_projected: 0}
