@@ -1,3 +1,4 @@
+{{ config(tags=['daily']) }}
 with inventory as (
     select * from {{ ref('stg_inventory_snapshots') }}
 )

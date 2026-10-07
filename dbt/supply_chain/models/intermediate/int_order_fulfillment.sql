@@ -1,3 +1,4 @@
+{{ config(tags=['daily']) }}
 with sales_orders as (
     select * from {{ ref('stg_sales_orders') }}
 )

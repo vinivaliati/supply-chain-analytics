@@ -1,3 +1,4 @@
+{{ config(tags=['daily']) }}
 select
     po_id
     , supplier_id

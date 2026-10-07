@@ -1,3 +1,4 @@
+{{ config(tags=['daily']) }}
 select
     order_id
     , sku_id

@@ -1,3 +1,4 @@
+{{ config(tags=['daily']) }}
 with inventory as (
     select * from {{ ref('int_inventory_physical_projection') }}
 )

@@ -1,3 +1,4 @@
+{{ config(tags=['static']) }}
 select
     warehouse_id
     , warehouse_name

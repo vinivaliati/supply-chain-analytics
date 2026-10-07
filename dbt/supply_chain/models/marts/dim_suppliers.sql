@@ -1,3 +1,4 @@
+{{ config(tags=['static']) }}
 select
     supplier_id
     , supplier_name

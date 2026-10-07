@@ -76,6 +76,8 @@ Detalhes que costumam causar erro:
 
 ## Convenções do dbt
 
+Prioridade do projeto: código padronizado antes de código mínimo. Não remover estrutura repetida (dedup, tags, listas de colunas) em nome de enxugar.
+
 **Camadas** (configuradas em `dbt_project.yml`):
 
 | Camada | Prefixo | Materialização | Schema | Lê de |
@@ -84,9 +86,9 @@ Detalhes que costumam causar erro:
 | intermediate | `int_` | view | `dbt_dev_intermediate` | `ref` de staging |
 | marts | `dim_`, `fct_` | table | `dbt_dev_marts` | `ref` de intermediate, staging ou snapshot |
 
-- Staging é um modelo por tabela raw e um `select` só: cast explícito de toda coluna e nada mais. Sem dedup (os testes `unique` das fontes cobrem a chave) e sem `select *`.
+- Staging é um modelo por tabela raw, sempre com a mesma estrutura: CTE `source` → CTE `renamed` com cast explícito de toda coluna → CTE `deduped` (`row_number()` particionado pela chave) → `select` final listando as colunas com `where row_num = 1`, sem `select *`. Manter o dedup em todos, mesmo quando a fonte não tem duplicatas: o padrão vale mais que o enxugamento.
 - Regras de negócio ficam em intermediate. Os `fct_` são finos: selecionam colunas do `int_` correspondente.
-- Sem tags: nada seleciona por tag. `config()` só aparece onde muda a materialização (`fct_inventory_daily` é incremental, sem `incremental_strategy`, para valer em qualquer warehouse).
+- Todo modelo começa com `{{ config(tags=[...]) }}`: `daily` para o que muda a cada carga, `static` para dimensões. As camadas também têm tag em `dbt_project.yml` (`staging`, `intermediate`, `marts`). Modelo com outras opções (como o incremental `fct_inventory_daily`, sem `incremental_strategy` para valer em qualquer warehouse) usa o `config()` em várias linhas, com a tag junto.
 - Estilo SQL: palavras-chave em minúsculas, vírgula no início da linha, CTEs encadeadas com `, nome as (`, colunas qualificadas com o nome da tabela em joins, 4 espaços de indentação.
 - Nomes de colunas em inglês e snake_case; chaves `<entidade>_id`; booleanos `is_`/`was_`; quantidades `_qty`; datas `_date`.
 - Documentação e testes ficam no YAML da camada (`_staging__sources.yml`, `_staging__models.yml`, `_intermediate__models.yml`, `_marts__models.yml`), com descrições em português. Todo modelo novo entra ali com descrição e, no mínimo, `unique` + `not_null` na chave (ou `dbt_utils.unique_combination_of_columns` para chave composta) e `relationships` nas chaves estrangeiras.

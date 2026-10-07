@@ -1,3 +1,4 @@
+{{ config(tags=['static']) }}
 -- ponytail: periodo fixo, igual a START_DATE/END_DATE de data_generator/config/settings.py
 with date_spine as (
     {{ dbt_utils.date_spine(
