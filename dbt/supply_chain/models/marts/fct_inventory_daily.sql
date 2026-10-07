@@ -1,4 +1,4 @@
-{{ config(materialized='incremental', unique_key=['snapshot_date', 'sku_id', 'warehouse_id']) }}
+{{ config(materialized='incremental', unique_key=['snapshot_date', 'sku_id', 'warehouse_id'], on_schema_change='append_new_columns') }}
 select
     snapshot_date
     , sku_id

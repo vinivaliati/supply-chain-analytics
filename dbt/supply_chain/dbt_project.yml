@@ -22,3 +22,5 @@ models:
     marts:
       +materialized: table
       +schema: marts
+      +contract:
+        enforced: true

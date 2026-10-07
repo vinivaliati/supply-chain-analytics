@@ -94,7 +94,7 @@ Detalhes que costumam causar erro:
 - Único pacote: `dbt_utils` 1.1.1. Não há macros próprias.
 - SQL portável (o projeto vai rodar também em BigQuery e Snowflake): nada de `::`, `to_char` ou subtração de datas. Usar `cast(x as {{ dbt.type_int() }})` (e `type_string`, `type_numeric`, `type_boolean`), `cast(x as date)` e `{{ dbt.datediff(...) }}`. Sem `IGNORE NULLS` (ver `int_inventory_physical_projection`).
 - Regra de negócio nova em intermediate ganha um teste unitário em `_intermediate__unit_tests.yml` (`dbt test --select test_type:unit`).
-- Ao adicionar ou mudar colunas de marts, atualizar `docs/data_dictionary.md` e conferir se alguma aba do Streamlit usa a coluna.
+- Os marts têm contrato (`+contract: enforced` em `dbt_project.yml`): toda coluna precisa estar em `_marts__models.yml` com `data_type` (`string`, `integer`, `numeric`, `date`, `boolean`) e descrição, ou o build falha. Ao adicionar ou mudar colunas de marts, atualizar esse YAML e conferir se alguma aba do Streamlit usa a coluna.
 
 ## O que não alterar nem commitar
 
