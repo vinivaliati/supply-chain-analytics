@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_USER = os.getenv("POSTGRES_USER", "supply_admin")
-DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "supply_dev_password")
-DB_NAME = os.getenv("POSTGRES_DB", "supply_chain")
+DB_USER = os.environ["POSTGRES_USER"]
+DB_PASSWORD = os.environ["POSTGRES_PASSWORD"]
+DB_NAME = os.environ["POSTGRES_DB"]
 DB_HOST = os.getenv("SUPPLY_CHAIN_DB_HOST", "localhost")
 DB_PORT = "5432"
 

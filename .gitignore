@@ -15,7 +15,6 @@ data_generator/output/*.csv
 dbt/supply_chain/target/
 dbt/supply_chain/dbt_packages/
 dbt/supply_chain/logs/
-profiles.yml
 
 # Airflow
 airflow/logs/
@@ -30,3 +29,4 @@ airflow/dags/__pycache__/
 .DS_Store
 Thumbs.db
 dbt/supply_chain/package-lock.yml
+.superpowers/

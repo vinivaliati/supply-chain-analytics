@@ -1,3 +1,6 @@
+include .env
+export
+
 DBT_DIR := dbt/supply_chain
 # Usa o dbt da .venv se existir; senão, o do PATH
 DBT := $(if $(wildcard .venv/bin/dbt),$(abspath .venv/bin/dbt),dbt)
