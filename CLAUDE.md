@@ -22,7 +22,7 @@ Quatro temas de negócio: **OTIF**, **ruptura de estoque**, **acurácia de inven
 | `dbt/supply_chain/profiles.yml` | Profile único do dbt (local, Airflow e CI). Versionado porque lê tudo de `env_var`; nunca escrever credencial nele. |
 | `airflow/` | `Dockerfile`, compose do Airflow 2.9.1 (CeleryExecutor) e a DAG em `dags/generate_and_load_data_dag.py`. |
 | `streamlit_app/` | Dashboard. `db.py` conecta no Postgres e lê o schema `dbt_dev_marts`; uma aba por arquivo em `tabs/`. |
-| `docs/` | `architecture.svg`, `data_dictionary.md` e prints do dashboard. |
+| `docs/` | `architecture.svg` e prints do dashboard. O dicionário de dados é o site do dbt (https://vinivaliati.github.io/supply-chain-analytics/), gerado pelo CI a partir das descrições nos YAMLs. |
 
 ## Comandos
 

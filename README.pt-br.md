@@ -72,7 +72,7 @@ supply-chain-analytics/
 ├── dbt/supply_chain/        # Projeto dbt (staging, intermediate, marts, snapshots)
 ├── airflow/                 # DAGs do Airflow e configuração do Docker Compose
 ├── docker-compose.yml       # Container do Postgres (data warehouse)
-└── docs/                    # Diagrama de arquitetura, dicionário de dados
+└── docs/                    # Diagrama de arquitetura, prints do dashboard
 ```
 
 ## Como rodar
@@ -105,7 +105,7 @@ docker compose -f airflow/docker-compose.yml up -d
 streamlit run streamlit_app/app.py
 ```
 
-Veja [docs/data_dictionary.md](docs/data_dictionary.md) para o schema completo.
+O schema completo, as descrições das colunas, os testes e o grafo de linhagem estão no [site de documentação do dbt](https://vinivaliati.github.io/supply-chain-analytics/), regenerado a cada push na `main`.
 
 ## Resultados
 
