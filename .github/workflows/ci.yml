@@ -38,8 +38,18 @@ jobs:
       - run: dbt deps
         working-directory: dbt/supply_chain
       - run: sqlfluff lint dbt/supply_chain/models
-      - run: dbt build
+      # Em PR, constroi so o que mudou (e seus pais e filhos), comparando com o
+      # manifest da main publicado junto com a documentacao. Sem manifest, build completo.
+      - name: dbt build
         working-directory: dbt/supply_chain
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ] && \
+             curl -fsS "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/manifest.json" \
+               -o /tmp/state/manifest.json --create-dirs; then
+            dbt build --select "+state:modified+" --state /tmp/state
+          else
+            dbt build
+          fi
       - name: Gera a documentacao do dbt (so na main)
         if: github.ref == 'refs/heads/main'
         working-directory: dbt/supply_chain

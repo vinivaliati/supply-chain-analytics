@@ -1,5 +1,7 @@
 # Pipeline de Analytics de Supply Chain
 
+[![ci](https://github.com/vinivaliati/supply-chain-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/vinivaliati/supply-chain-analytics/actions/workflows/ci.yml)
+
 *[Read in English](README.md)*
 
 Um projeto de portfólio de engenharia de dados ponta a ponta simulando a cadeia de suprimentos de uma empresa de distribuição: geração de dados sintéticos, orquestração com Airflow, transformação com dbt, tudo rodando em Docker.
