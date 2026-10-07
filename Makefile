@@ -17,9 +17,10 @@ down:
 	docker compose -f airflow/docker-compose.yml down
 	docker compose down
 
-# Snapshot antes do run: dim_products le do snapshot, que so depende de raw.products
+# dbt build roda snapshot, modelos e testes na ordem do grafo.
+# Apaga target/ antes: o dbt do Airflow (outra versao) grava ali num formato incompativel.
 dbt-build:
-	cd $(DBT_DIR) && $(DBT) deps && $(DBT) snapshot && $(DBT) run
+	cd $(DBT_DIR) && rm -rf target && $(DBT) deps && $(DBT) build
 
 test:
 	cd $(DBT_DIR) && $(DBT) test

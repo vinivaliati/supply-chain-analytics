@@ -3,9 +3,7 @@ DAG que orquestra o pipeline de dados sinteticos de supply chain:
 1. Gera os dados (dimensoes, compras, vendas, estoque, contagens, shipments)
 2. Carrega os CSVs gerados no Postgres (schema raw)
 3. Instala dependencias do dbt (dbt_utils)
-4. Roda o snapshot do dbt (SCD2 da curva ABC, lido por dim_products)
-5. Roda as transformacoes do dbt (staging -> intermediate -> marts)
-6. Roda os testes do dbt
+4. Roda dbt build: snapshot, modelos e testes, na ordem do grafo de dependencias
 """
 import os
 import sys
@@ -66,19 +64,9 @@ with DAG(
         bash_command=f"cd {DBT_PROJECT_DIR} && dbt deps",
     )
 
-    dbt_snapshot = BashOperator(
-        task_id="dbt_snapshot",
-        bash_command=f"cd {DBT_PROJECT_DIR} && dbt snapshot",
+    dbt_build = BashOperator(
+        task_id="dbt_build",
+        bash_command=f"cd {DBT_PROJECT_DIR} && dbt build",
     )
 
-    dbt_run = BashOperator(
-        task_id="dbt_run",
-        bash_command=f"cd {DBT_PROJECT_DIR} && dbt run",
-    )
-
-    dbt_test = BashOperator(
-        task_id="dbt_test",
-        bash_command=f"cd {DBT_PROJECT_DIR} && dbt test",
-    )
-
-    generate_data >> load_data >> dbt_clean >> dbt_deps >> dbt_snapshot >> dbt_run >> dbt_test
+    generate_data >> load_data >> dbt_clean >> dbt_deps >> dbt_build

@@ -44,7 +44,7 @@ Gerador Python → Postgres (raw) → dbt staging → dbt intermediate → dbt m
                                    snapshot (SCD2)
 ```
 
-O Airflow orquestra cada etapa acima numa única DAG: gerar dados → carregar no Postgres → limpar artefatos do dbt → instalar pacotes do dbt → snapshot → rodar os models → testes.
+O Airflow orquestra cada etapa acima numa única DAG: gerar dados → carregar no Postgres → limpar artefatos do dbt → instalar pacotes do dbt → `dbt build` (snapshot, models e testes, na ordem das dependências).
 
 ## Decisões técnicas importantes
 
@@ -74,9 +74,12 @@ supply-chain-analytics/
 Pré-requisitos: Docker Desktop, WSL2 (Windows) ou um shell Linux/Mac, Python 3.11+.
 
 ```bash
+# 0. Credenciais (lidas pelo loader, pelo dbt, pelo Makefile e pelo dashboard)
+cp .env.example .env
+
 # 1. Gerar os dados sintéticos
 python -m venv .venv && source .venv/bin/activate
-pip install -r data_generator/requirements.txt
+pip install -r data_generator/requirements.txt -r requirements-dev.txt -r streamlit_app/requirements.txt
 python -m data_generator.main
 
 # 2. Subir o Postgres
@@ -85,18 +88,15 @@ docker compose up -d
 # 3. Carregar os dados
 python -m data_generator.load_to_postgres
 
-# 4. Rodar o dbt
-cd dbt/supply_chain
-dbt deps && dbt snapshot && dbt run && dbt test
+# 4. Rodar o dbt (o Makefile exporta o .env e roda dbt deps && dbt build)
+make dbt-build
 
 # 5. Ou rodar tudo via Airflow
-cd ../../airflow
-docker compose up -d
+docker compose -f airflow/docker-compose.yml up -d
 # dispare a DAG "generate_and_load_supply_chain_data" em http://localhost:8080
 
 # 6. Abrir o dashboard
-cd ../..
-SUPPLY_CHAIN_DB_HOST=localhost streamlit run streamlit_app/app.py
+streamlit run streamlit_app/app.py
 ```
 
 Veja [docs/data_dictionary.md](docs/data_dictionary.md) para o schema completo.
