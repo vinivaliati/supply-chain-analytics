@@ -1,4 +1,3 @@
-{{ config(tags=['daily']) }}
 with shipments as (
     select * from {{ ref('stg_shipments') }}
 )

@@ -1,4 +1,3 @@
-{{ config(tags=['static']) }}
 with date_spine as (
     {{ dbt_utils.date_spine(
         datepart="day",

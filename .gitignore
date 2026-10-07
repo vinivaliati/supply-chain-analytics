@@ -30,3 +30,4 @@ airflow/dags/__pycache__/
 Thumbs.db
 dbt/supply_chain/package-lock.yml
 .superpowers/
+logs/

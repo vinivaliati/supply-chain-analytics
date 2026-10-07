@@ -1,4 +1,3 @@
-{{ config(tags=['static']) }}
 select
     stores.store_id
     , stores.store_name

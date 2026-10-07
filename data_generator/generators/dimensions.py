@@ -18,6 +18,7 @@ from data_generator.config.settings import (
     N_SUPPLIERS,
     N_WAREHOUSES,
     PRODUCT_CATEGORIES,
+    RANDOM_SEED,
     REGIONS,
 )
 
@@ -123,6 +124,7 @@ def generate_carriers(rng: np.random.Generator) -> pd.DataFrame:
 
 def generate_all_dimensions(rng: np.random.Generator) -> dict[str, pd.DataFrame]:
     """Gera todas as dimensões e retorna um dicionário {nome_tabela: dataframe}."""
+    fake.seed_instance(RANDOM_SEED)  # nomes reprodutíveis entre execuções
     suppliers = generate_suppliers(rng)
     products = generate_products(rng, supplier_ids=suppliers["supplier_id"].tolist())
     warehouses = generate_warehouses(rng)

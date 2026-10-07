@@ -54,7 +54,7 @@ Airflow orchestrates every step above as a single DAG: generate data → load to
 
 **SCD Type 2 snapshot.** The ABC curve is fixed in this dataset, but a dbt snapshot (`products_abc_curve_snapshot`) still tracks it with `dbt_valid_from` / `dbt_valid_to`, demonstrating the technique for a value that would change in production.
 
-**Incremental model.** `stg_inventory_snapshots_incremental` only reprocesses rows newer than the last run's max date, instead of reprocessing the full 175k-row history every time the right default for a fact table that grows daily in production.
+**Incremental model.** `fct_inventory_daily`, the largest table (175k rows), is incremental: each run only processes snapshot dates newer than the latest one already loaded, instead of rebuilding the full history — the right default for a fact table that grows daily in production. After changing the generator, rebuild it with `dbt build --full-refresh`.
 
 **Two dbt environments, one project.** dbt runs locally (for fast iteration) and inside the Airflow worker container (for orchestrated runs), on different dbt-core versions due to Airflow's dependency constraints. Both point at the same Postgres instance via `host.docker.internal`, with credentials injected via `.env`/`env_file`, never hardcoded.
 

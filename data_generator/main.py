@@ -44,8 +44,6 @@ def main():
     start = time.time()
     inventory_snapshots, sales_orders_resolved = run_inventory_engine(
         rng,
-        dimensions["products"],
-        dimensions["warehouses"],
         purchase_orders,
         sales_orders,
     )

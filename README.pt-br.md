@@ -54,7 +54,7 @@ O Airflow orquestra cada etapa acima numa única DAG: gerar dados → carregar n
 
 **Snapshot SCD Tipo 2.** A curva ABC é fixa nesse dataset, mas um snapshot do dbt (`products_abc_curve_snapshot`) ainda rastreia ela com `dbt_valid_from` / `dbt_valid_to`, demonstrando a técnica para um valor que mudaria em produção.
 
-**Modelo incremental.** `stg_inventory_snapshots_incremental` só reprocessa linhas mais novas que a última data máxima processada, em vez de reprocessar as 175 mil linhas de histórico toda vez o padrão correto para uma tabela de fatos que cresce diariamente em produção.
+**Modelo incremental.** `fct_inventory_daily`, a maior tabela (175 mil linhas), é incremental: cada execução só processa as datas de snapshot mais novas que a última já carregada, em vez de reconstruir todo o histórico — o padrão correto para uma tabela de fatos que cresce diariamente em produção. Depois de mudar o gerador, reconstrua com `dbt build --full-refresh`.
 
 **Dois ambientes dbt, um projeto.** O dbt roda localmente (para iteração rápida) e dentro do container worker do Airflow (para execuções orquestradas), em versões diferentes do dbt-core por causa de restrições de dependência do Airflow. Ambos apontam para a mesma instância do Postgres via `host.docker.internal`, com credenciais injetadas via `.env`/`env_file`, nunca hardcoded.
 

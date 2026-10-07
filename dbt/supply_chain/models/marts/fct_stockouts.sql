@@ -1,4 +1,3 @@
-{{ config(tags=['daily']) }}
 with stockouts as (
     select * from {{ ref('int_stockout_events') }}
 )

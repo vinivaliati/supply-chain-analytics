@@ -23,7 +23,6 @@ Quatro temas de negócio: **OTIF**, **ruptura de estoque**, **acurácia de inven
 | `airflow/` | `Dockerfile`, compose do Airflow 2.9.1 (CeleryExecutor) e a DAG em `dags/generate_and_load_data_dag.py`. |
 | `streamlit_app/` | Dashboard. `db.py` conecta no Postgres e lê o schema `dbt_dev_marts`; uma aba por arquivo em `tabs/`. |
 | `docs/` | `architecture.svg`, `data_dictionary.md` e prints do dashboard. |
-| `warehouse_init/` | Montada em `/docker-entrypoint-initdb.d` do Postgres; hoje vazia. |
 
 ## Comandos
 
@@ -48,7 +47,7 @@ make dbt-build        # dbt deps && dbt build (snapshot, modelos e testes)
 make test             # só dbt test
 cd dbt/supply_chain
 dbt run --select stg_sales_orders+      # um modelo e seus dependentes
-dbt run --select stg_inventory_snapshots_incremental --full-refresh
+dbt build --full-refresh               # obrigatório depois de mudar o gerador (fct_inventory_daily é incremental)
 
 # Airflow (UI em http://localhost:8080, usuário/senha airflow)
 cd airflow
@@ -87,7 +86,7 @@ Detalhes que costumam causar erro:
 
 - Staging é um modelo por tabela raw: CTE `source` → CTE `renamed` com cast explícito de toda coluna (`col::tipo as col`) → dedup por `row_number()` quando há chave → `select` final listando as colunas, sem `select *`.
 - Regras de negócio ficam em intermediate. Os `fct_` são finos: selecionam colunas do `int_` correspondente.
-- Todo modelo começa com `{{ config(tags=[...]) }}`: `daily` para o que muda a cada carga, `static` para dimensões.
+- Sem tags: nada seleciona por tag. `config()` só aparece onde muda a materialização (`fct_inventory_daily` é incremental, sem `incremental_strategy`, para valer em qualquer warehouse).
 - Estilo SQL: palavras-chave em minúsculas, vírgula no início da linha, CTEs encadeadas com `, nome as (`, colunas qualificadas com o nome da tabela em joins, 4 espaços de indentação.
 - Nomes de colunas em inglês e snake_case; chaves `<entidade>_id`; booleanos `is_`/`was_`; quantidades `_qty`; datas `_date`.
 - Documentação e testes ficam no YAML da camada (`_staging__sources.yml`, `_staging__models.yml`, `_intermediate__models.yml`, `_marts__models.yml`), com descrições em português. Todo modelo novo entra ali com descrição e, no mínimo, `unique` + `not_null` na chave (ou `dbt_utils.unique_combination_of_columns` para chave composta) e `relationships` nas chaves estrangeiras.
@@ -109,7 +108,7 @@ Nunca commitar:
 Não alterar sem pedido explícito:
 
 - Versões fixadas em `airflow/requirements.txt` (`dbt-postgres==1.9.1`, `click==8.2.1`) e a imagem `apache/airflow:2.9.1`: foram fixadas para resolver conflitos de dependência do Airflow.
-- `RANDOM_SEED` e os parâmetros de `data_generator/config/settings.py`: mudam todo o dataset e invalidam os números da seção "Resultados" do README e os prints.
+- `RANDOM_SEED` e os parâmetros de `data_generator/config/settings.py`: mudam todo o dataset e invalidam os números da seção "Resultados" do README e os prints. Pelo mesmo motivo, nunca adicionar, remover ou reordenar chamadas ao `rng` no gerador: desloca a sequência aleatória. Duas execuções seguidas têm de gerar CSVs idênticos (`cmp`).
 - Nomes de schema (`raw`, `dbt_dev`, sufixos das camadas): `streamlit_app/db.py` lê `dbt_dev_marts` por nome fixo.
 - O `dag_id` `generate_and_load_supply_chain_data`, citado nos READMEs.
 - O cabeçalho de licença Apache e a estrutura base de `airflow/docker-compose.yml` (é o compose oficial do Airflow com poucos ajustes).

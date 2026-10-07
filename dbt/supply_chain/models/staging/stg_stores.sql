@@ -1,5 +1,3 @@
-{{ config(tags=['static']) }}
-
 with source as (
     select * from {{ source('raw', 'stores') }}
 )

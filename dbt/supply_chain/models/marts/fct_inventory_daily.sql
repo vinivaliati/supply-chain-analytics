@@ -1,4 +1,4 @@
-{{ config(tags=['daily']) }}
+{{ config(materialized='incremental', unique_key=['snapshot_date', 'sku_id', 'warehouse_id']) }}
 select
     snapshot_date
     , sku_id
@@ -16,3 +16,6 @@ select
     , is_below_reorder_point
     , is_stockout
 from {{ ref('int_inventory_coverage') }}
+{% if is_incremental() %}
+    where snapshot_date > (select max(loaded.snapshot_date) from {{ this }} as loaded)
+{% endif %}
