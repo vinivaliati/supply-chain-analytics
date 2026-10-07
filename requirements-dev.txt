@@ -3,3 +3,4 @@ dbt-postgres==1.11.0
 sqlfluff
 sqlfluff-templater-dbt
 ruff
+dbt-metricflow==0.15.0

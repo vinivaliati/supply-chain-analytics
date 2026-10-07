@@ -1,0 +1,190 @@
+# Camada semantica (MetricFlow). Medidas com create_metric viram metricas simples
+# de mesmo nome, usadas como numerador e denominador das metricas de razao.
+semantic_models:
+  - name: orders
+    description: "Pedidos de venda com as flags de OTIF e de ruptura."
+    model: ref('fct_otif')
+    defaults:
+      agg_time_dimension: order_date
+    entities:
+      - name: order
+        type: primary
+        expr: order_id
+      - name: product
+        type: foreign
+        expr: sku_id
+    dimensions:
+      - name: order_date
+        type: time
+        type_params:
+          time_granularity: day
+    measures:
+      - name: orders_total
+        create_metric: true
+        agg: count
+        expr: order_id
+      - name: orders_otif
+        create_metric: true
+        agg: sum
+        expr: case when is_otif then 1 else 0 end
+      - name: orders_in_full
+        create_metric: true
+        agg: sum
+        expr: case when is_in_full then 1 else 0 end
+      - name: orders_on_time
+        create_metric: true
+        agg: sum
+        expr: case when is_on_time then 1 else 0 end
+      - name: orders_with_stockout
+        create_metric: true
+        agg: sum
+        expr: case when fulfilled_qty < requested_qty then 1 else 0 end
+
+  - name: stockouts
+    description: "Eventos de ruptura, com a receita perdida estimada."
+    model: ref('fct_stockouts')
+    defaults:
+      agg_time_dimension: order_date
+    entities:
+      - name: stockout
+        type: primary
+        expr: order_id
+      - name: product
+        type: foreign
+        expr: sku_id
+    dimensions:
+      - name: order_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: curve
+        type: categorical
+    measures:
+      - name: lost_revenue
+        create_metric: true
+        agg: sum
+        expr: estimated_lost_revenue
+
+  - name: inventory
+    description: "Estoque diario por SKU e CD."
+    model: ref('fct_inventory_daily')
+    primary_entity: inventory_snapshot
+    defaults:
+      agg_time_dimension: snapshot_date
+    entities:
+      - name: product
+        type: foreign
+        expr: sku_id
+    dimensions:
+      - name: snapshot_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: curve
+        type: categorical
+    measures:
+      - name: inventory_divergence_avg
+        create_metric: true
+        agg: average
+        expr: abs(physical_vs_theoretical_divergence)
+      - name: coverage_days_avg
+        create_metric: true
+        agg: average
+        expr: coverage_days_physical
+
+  - name: shipments
+    description: "Envios do CD para a loja."
+    model: ref('fct_transit_performance')
+    defaults:
+      agg_time_dimension: ship_date
+    entities:
+      - name: shipment
+        type: primary
+        expr: shipment_id
+    dimensions:
+      - name: ship_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: carrier_name
+        type: categorical
+    measures:
+      - name: shipments_total
+        create_metric: true
+        agg: count
+        expr: shipment_id
+      - name: shipments_on_time
+        create_metric: true
+        agg: sum
+        expr: case when is_on_time then 1 else 0 end
+
+  - name: purchase_orders
+    description: "Pedidos de compra aos fornecedores."
+    model: ref('fct_supplier_otif')
+    defaults:
+      agg_time_dimension: order_date
+    entities:
+      - name: purchase_order
+        type: primary
+        expr: po_id
+      - name: supplier
+        type: foreign
+        expr: supplier_id
+    dimensions:
+      - name: order_date
+        type: time
+        type_params:
+          time_granularity: day
+    measures:
+      - name: purchase_orders_total
+        create_metric: true
+        agg: count
+        expr: po_id
+      - name: purchase_orders_otif
+        create_metric: true
+        agg: sum
+        expr: case when is_otif then 1 else 0 end
+
+metrics:
+  - name: otif_rate
+    label: OTIF
+    description: "Fração dos pedidos de venda entregues no prazo e na quantidade pedida."
+    type: ratio
+    type_params:
+      numerator: orders_otif
+      denominator: orders_total
+  - name: in_full_rate
+    label: In Full
+    description: "Fração dos pedidos de venda atendidos na quantidade pedida."
+    type: ratio
+    type_params:
+      numerator: orders_in_full
+      denominator: orders_total
+  - name: on_time_rate
+    label: On Time
+    description: "Fração dos pedidos de venda entregues até a data prometida."
+    type: ratio
+    type_params:
+      numerator: orders_on_time
+      denominator: orders_total
+  - name: stockout_rate
+    label: Taxa de ruptura
+    description: "Fração dos pedidos de venda atendidos parcialmente ou não atendidos."
+    type: ratio
+    type_params:
+      numerator: orders_with_stockout
+      denominator: orders_total
+  - name: transit_on_time_rate
+    label: Entrega no prazo (trânsito)
+    description: "Fração dos envios entregues até a data prometida."
+    type: ratio
+    type_params:
+      numerator: shipments_on_time
+      denominator: shipments_total
+  - name: supplier_otif_rate
+    label: OTIF de fornecedor
+    description: "Fração dos pedidos de compra recebidos no prazo e na quantidade pedida."
+    type: ratio
+    type_params:
+      numerator: purchase_orders_otif
+      denominator: purchase_orders_total

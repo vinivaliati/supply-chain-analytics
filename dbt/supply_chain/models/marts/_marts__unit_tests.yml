@@ -1,0 +1,17 @@
+unit_tests:
+  - name: otif_de_fornecedor_exige_prazo_e_quantidade
+    description: "Um pedido de compra e OTIF quando chega ate a data prometida e na quantidade pedida."
+    model: fct_supplier_otif
+    given:
+      - input: ref('stg_purchase_orders')
+        rows:
+          - {po_id: 1, ordered_qty: 100, received_qty: 100, promised_date: 2026-01-10, received_date: 2026-01-10}
+          - {po_id: 2, ordered_qty: 100, received_qty: 80, promised_date: 2026-01-10, received_date: 2026-01-09}
+          - {po_id: 3, ordered_qty: 100, received_qty: 100, promised_date: 2026-01-10, received_date: 2026-01-11}
+          - {po_id: 4, ordered_qty: 100, received_qty: 70, promised_date: 2026-01-10, received_date: 2026-01-15}
+    expect:
+      rows:
+        - {po_id: 1, is_in_full: true, is_on_time: true, is_otif: true}
+        - {po_id: 2, is_in_full: false, is_on_time: true, is_otif: false}
+        - {po_id: 3, is_in_full: true, is_on_time: false, is_otif: false}
+        - {po_id: 4, is_in_full: false, is_on_time: false, is_otif: false}

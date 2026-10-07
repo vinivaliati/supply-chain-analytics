@@ -56,6 +56,10 @@ O Airflow orquestra cada etapa acima numa única DAG: gerar dados → carregar n
 
 **Modelo incremental.** `fct_inventory_daily`, a maior tabela (175 mil linhas), é incremental: cada execução só processa as datas de snapshot mais novas que a última já carregada, em vez de reconstruir todo o histórico — o padrão correto para uma tabela de fatos que cresce diariamente em produção. Depois de mudar o gerador, reconstrua com `dbt build --full-refresh`.
 
+**Contratos de dados e testes unitários.** Todo mart tem contrato do dbt aplicado (nomes e tipos de coluna declarados no YAML; divergência quebra o build), além de testes de integridade referencial dos fatos para as dimensões. As regras de negócio da camada intermediate (decomposição do OTIF, projeção do estoque físico) e o fato de OTIF de fornecedor são cobertos por testes unitários do dbt com dados escritos à mão.
+
+**Camada semântica.** Nove métricas são definidas uma única vez no MetricFlow (`models/marts/_semantic_models.yml`) sobre os marts: `otif_rate`, `in_full_rate`, `on_time_rate`, `stockout_rate`, `lost_revenue`, `inventory_divergence_avg`, `coverage_days_avg`, `transit_on_time_rate` e `supplier_otif_rate`. Exemplo: `mf query --metrics otif_rate --group-by metric_time__month`.
+
 **Dois ambientes dbt, um projeto.** O dbt roda localmente (para iteração rápida) e dentro do container worker do Airflow (para execuções orquestradas), em versões diferentes do dbt-core por causa de restrições de dependência do Airflow. Ambos apontam para a mesma instância do Postgres via `host.docker.internal`, com credenciais injetadas via `.env`/`env_file`, nunca hardcoded.
 
 ## Estrutura do projeto

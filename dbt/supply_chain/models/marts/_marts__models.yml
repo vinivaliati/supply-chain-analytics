@@ -3,9 +3,12 @@ version: 2
 models:
   - name: dim_date
     description: "Dimensão de datas cobrindo o período de simulação (2026), usada também como time spine das métricas."
+    time_spine:
+      standard_granularity_column: date_day
     columns:
       - name: date_day
         data_type: date
+        granularity: day
         description: "Dia do calendário."
         constraints:
           - type: not_null
@@ -485,3 +488,78 @@ models:
       - name: delay_days
         data_type: integer
         description: "Dias entre a data prometida e a entrega; negativo quando adiantou."
+
+  - name: fct_supplier_otif
+    description: "Fato de OTIF de fornecedor: um registro por pedido de compra, com flags de in_full, on_time e otif."
+    columns:
+      - name: po_id
+        data_type: integer
+        description: "Identificador do pedido de compra."
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+      - name: supplier_id
+        data_type: integer
+        description: "Fornecedor do pedido."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_suppliers')
+                field: supplier_id
+      - name: sku_id
+        data_type: integer
+        description: "Produto comprado."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: sku_id
+      - name: warehouse_id
+        data_type: integer
+        description: "CD que recebe a compra."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_warehouses')
+                field: warehouse_id
+      - name: order_date
+        data_type: date
+        description: "Data do pedido de compra."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: promised_date
+        data_type: date
+        description: "Data de entrega prometida pelo fornecedor."
+      - name: received_date
+        data_type: date
+        description: "Data real de recebimento."
+      - name: ordered_qty
+        data_type: integer
+        description: "Quantidade pedida."
+      - name: received_qty
+        data_type: integer
+        description: "Quantidade recebida; menor que a pedida quando o fornecedor entrega incompleto."
+      - name: is_in_full
+        data_type: boolean
+        description: "Recebido na quantidade pedida ou mais."
+        tests:
+          - not_null
+      - name: is_on_time
+        data_type: boolean
+        description: "Recebido até a data prometida."
+        tests:
+          - not_null
+      - name: is_otif
+        data_type: boolean
+        description: "Recebido no prazo e na quantidade pedida."
+        tests:
+          - not_null
