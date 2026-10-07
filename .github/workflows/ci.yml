@@ -40,8 +40,11 @@ jobs:
       - run: dbt deps
         working-directory: dbt/supply_chain
       - run: sqlfluff lint dbt/supply_chain/models
-      # Em PR que so mexe em dbt/supply_chain, constroi so o que mudou (com pais e filhos),
-      # comparando com o manifest da main publicado junto com a documentacao.
+      # Em PR que so mexe em dbt/supply_chain, constroi so o que mudou, comparando com o
+      # manifest da main publicado junto com a documentacao. O banco do CI nasce vazio, entao:
+      #   @state:modified  = o que mudou, seus filhos e todos os pais desses filhos
+      #   buildable        = so roda teste cujos modelos referenciados foram construidos
+      # (com "+state:modified+" os testes de relacionamento dos pais falhavam por tabela inexistente)
       # Qualquer outro caso (gerador, requirements, sem manifest) faz o build completo.
       - name: dbt build
         working-directory: dbt/supply_chain
@@ -55,7 +58,7 @@ jobs:
              git diff --name-only "origin/${{ github.base_ref }}...HEAD" | only_dbt_changed && \
              curl -fsS "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/manifest.json" \
                -o /tmp/state/manifest.json --create-dirs; then
-            dbt build --select "+state:modified+" --state /tmp/state
+            dbt build --select "@state:modified" --state /tmp/state --indirect-selection buildable
           else
             dbt build
           fi
