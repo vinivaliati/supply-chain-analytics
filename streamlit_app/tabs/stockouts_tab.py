@@ -1,9 +1,8 @@
 """
 Aba de Ruptura: taxa, receita perdida estimada, breakdown por curva ABC.
 """
-import streamlit as st
 import plotly.express as px
-
+import streamlit as st
 from db import load_table
 
 

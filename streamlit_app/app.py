@@ -2,14 +2,13 @@
 Dashboard de Supply Chain Analytics.
 Consome os marts do dbt (schema dbt_dev_marts) via Postgres.
 """
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import streamlit as st
-
-from tabs import otif_tab, stockouts_tab, inventory_tab, transit_tab
+from tabs import inventory_tab, otif_tab, stockouts_tab, transit_tab
 
 st.set_page_config(
     page_title="Supply Chain Analytics",

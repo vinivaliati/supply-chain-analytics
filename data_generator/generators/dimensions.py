@@ -11,14 +11,14 @@ import pandas as pd
 from faker import Faker
 
 from data_generator.config.settings import (
-    N_SUPPLIERS,
-    N_PRODUCTS,
-    N_WAREHOUSES,
-    N_STORES,
-    N_CARRIERS,
     ABC_CURVE_DISTRIBUTION,
-    REGIONS,
+    N_CARRIERS,
+    N_PRODUCTS,
+    N_STORES,
+    N_SUPPLIERS,
+    N_WAREHOUSES,
     PRODUCT_CATEGORIES,
+    REGIONS,
 )
 
 fake = Faker("pt_BR")

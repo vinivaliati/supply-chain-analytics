@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: supply_chain
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ci
+      POSTGRES_DB: supply_chain
+      SUPPLY_CHAIN_DB_HOST: localhost
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r data_generator/requirements.txt -r requirements-dev.txt
+      - run: ruff check .
+      - run: python -m data_generator.main
+      - run: python -m data_generator.load_to_postgres
+      - run: dbt deps
+        working-directory: dbt/supply_chain
+      - run: sqlfluff lint dbt/supply_chain/models
+      - run: dbt build
+        working-directory: dbt/supply_chain

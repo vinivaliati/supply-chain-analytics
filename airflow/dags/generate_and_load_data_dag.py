@@ -11,9 +11,10 @@ import os
 import sys
 from datetime import datetime
 
-from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
+
+from airflow import DAG
 
 # Garante que o modulo data_generator seja encontrado dentro do container
 sys.path.insert(0, "/opt/airflow")
@@ -39,7 +40,7 @@ def run_data_load():
 with DAG(
     dag_id="generate_and_load_supply_chain_data",
     description="Gera dados sinteticos de supply chain, carrega no Postgres e roda as transformacoes dbt",
-    start_date=datetime(2024, 1, 1),
+    start_date=datetime(2024, 1, 1),  # noqa: DTZ001
     schedule=None,
     catchup=False,
     tags=["supply-chain", "data-generation", "dbt"],

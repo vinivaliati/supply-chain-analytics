@@ -8,7 +8,7 @@ with source as (
         supplier_id::integer as supplier_id
         , supplier_name::text as supplier_name
         , region::text as region
-        , reliability_score::numeric(5,3) as reliability_score
+        , reliability_score::numeric(5, 3) as reliability_score
         , promised_lead_time_days::integer as promised_lead_time_days
     from source
 )

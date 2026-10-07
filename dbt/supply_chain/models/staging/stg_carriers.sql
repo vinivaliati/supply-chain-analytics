@@ -7,7 +7,7 @@ with source as (
     select
         carrier_id::integer as carrier_id
         , carrier_name::text as carrier_name
-        , on_time_reliability::numeric(5,3) as on_time_reliability
+        , on_time_reliability::numeric(5, 3) as on_time_reliability
     from source
 )
 , deduped as (

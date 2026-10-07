@@ -13,7 +13,7 @@ with source as (
         , ship_date::date as ship_date
         , promised_delivery_date::date as promised_delivery_date
         , actual_delivery_date::date as actual_delivery_date
-        , distance_km::numeric(10,1) as distance_km
+        , distance_km::numeric(10, 1) as distance_km
     from source
 )
 , deduped as (

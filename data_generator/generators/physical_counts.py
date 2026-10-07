@@ -49,8 +49,6 @@ def generate_physical_counts(
     for (sku_id, warehouse_id), group in snapshots.groupby(["sku_id", "warehouse_id"], sort=False):
         group = group.sort_values("snapshot_date")
         curve = curve_by_sku[sku_id]
-
-        last_known_physical = None
         days_since_count = 0
 
         for _, row in group.iterrows():
@@ -77,8 +75,6 @@ def generate_physical_counts(
                     }
                 )
                 count_id += 1
-
-                last_known_physical = counted_qty
                 days_since_count = 0
                 physical_stock_col.append(counted_qty)
                 is_counted_col.append(True)

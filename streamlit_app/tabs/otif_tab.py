@@ -2,9 +2,8 @@
 Aba de OTIF: taxa geral, decomposição in-full/on-time, breakdown por fornecedor.
 """
 import pandas as pd
-import streamlit as st
 import plotly.express as px
-
+import streamlit as st
 from db import load_table
 
 

@@ -9,7 +9,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-from data_generator.config.settings import START_DATE, END_DATE
+from data_generator.config.settings import END_DATE, START_DATE
 
 
 def generate_sales_orders(

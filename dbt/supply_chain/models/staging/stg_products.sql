@@ -9,8 +9,8 @@ with source as (
         , sku_name::text as sku_name
         , category::text as category
         , supplier_id::integer as supplier_id
-        , unit_cost::numeric(10,2) as unit_cost
-        , weight_kg::numeric(10,2) as weight_kg
+        , unit_cost::numeric(10, 2) as unit_cost
+        , weight_kg::numeric(10, 2) as weight_kg
         , abc_curve::text as abc_curve
     from source
 )

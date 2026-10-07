@@ -1,9 +1,8 @@
 """
 Aba de Trânsito: OTD por transportadora, atraso por distância.
 """
-import streamlit as st
 import plotly.express as px
-
+import streamlit as st
 from db import load_table
 
 
