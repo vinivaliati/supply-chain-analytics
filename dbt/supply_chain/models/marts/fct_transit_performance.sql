@@ -21,7 +21,7 @@ with shipments as (
         , shipments.actual_delivery_date
         , shipments.distance_km
         , (shipments.actual_delivery_date <= shipments.promised_delivery_date) as is_on_time
-        , (shipments.actual_delivery_date - shipments.promised_delivery_date) as delay_days
+        , {{ dbt.datediff('shipments.promised_delivery_date', 'shipments.actual_delivery_date', 'day') }} as delay_days -- noqa: LT05
     from shipments
     left join carriers
         on shipments.carrier_id = carriers.carrier_id

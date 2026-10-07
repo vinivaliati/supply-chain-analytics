@@ -13,6 +13,7 @@ with inventory as (
         , in_transit_qty
         , avg_daily_demand
         , curve
+        , physical_vs_theoretical_divergence
         , (physical_stock_projected / nullif(avg_daily_demand, 0)) as coverage_days_physical
         , (theoretical_stock / nullif(avg_daily_demand, 0)) as coverage_days_theoretical
         , (physical_stock_projected <= safety_stock) as is_below_safety_stock
@@ -31,6 +32,7 @@ select
     , in_transit_qty
     , avg_daily_demand
     , curve
+    , physical_vs_theoretical_divergence
     , round(coverage_days_physical, 1) as coverage_days_physical
     , round(coverage_days_theoretical, 1) as coverage_days_theoretical
     , is_below_safety_stock

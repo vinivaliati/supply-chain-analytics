@@ -10,6 +10,7 @@ select
     , in_transit_qty
     , avg_daily_demand
     , curve
+    , physical_vs_theoretical_divergence
     , coverage_days_physical
     , coverage_days_theoretical
     , is_below_safety_stock

@@ -58,6 +58,13 @@ models:
   - name: fct_otif
     description: "Fato de OTIF: um registro por pedido de venda, com flags de in_full, on_time e otif."
     columns:
+      - name: order_date
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
       - name: order_id
         tests:
           - unique
@@ -87,6 +94,13 @@ models:
   - name: fct_inventory_daily
     description: "Fato de estoque diário por SKU/CD, com cobertura em dias e flags de risco."
     columns:
+      - name: snapshot_date
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
       - name: sku_id
         tests:
           - not_null

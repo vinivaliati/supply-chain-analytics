@@ -84,7 +84,7 @@ Detalhes que costumam causar erro:
 | intermediate | `int_` | view | `dbt_dev_intermediate` | `ref` de staging |
 | marts | `dim_`, `fct_` | table | `dbt_dev_marts` | `ref` de intermediate, staging ou snapshot |
 
-- Staging é um modelo por tabela raw: CTE `source` → CTE `renamed` com cast explícito de toda coluna (`col::tipo as col`) → dedup por `row_number()` quando há chave → `select` final listando as colunas, sem `select *`.
+- Staging é um modelo por tabela raw e um `select` só: cast explícito de toda coluna e nada mais. Sem dedup (os testes `unique` das fontes cobrem a chave) e sem `select *`.
 - Regras de negócio ficam em intermediate. Os `fct_` são finos: selecionam colunas do `int_` correspondente.
 - Sem tags: nada seleciona por tag. `config()` só aparece onde muda a materialização (`fct_inventory_daily` é incremental, sem `incremental_strategy`, para valer em qualquer warehouse).
 - Estilo SQL: palavras-chave em minúsculas, vírgula no início da linha, CTEs encadeadas com `, nome as (`, colunas qualificadas com o nome da tabela em joins, 4 espaços de indentação.
@@ -92,7 +92,8 @@ Detalhes que costumam causar erro:
 - Documentação e testes ficam no YAML da camada (`_staging__sources.yml`, `_staging__models.yml`, `_intermediate__models.yml`, `_marts__models.yml`), com descrições em português. Todo modelo novo entra ali com descrição e, no mínimo, `unique` + `not_null` na chave (ou `dbt_utils.unique_combination_of_columns` para chave composta) e `relationships` nas chaves estrangeiras.
 - Testes com argumentos usam a sintaxe com `arguments:` (ver `relationships` em `_marts__models.yml`).
 - Único pacote: `dbt_utils` 1.1.1. Não há macros próprias.
-- SQL precisa ser compatível com Postgres (sem `IGNORE NULLS`, por exemplo; ver `int_inventory_physical_projection`).
+- SQL portável (o projeto vai rodar também em BigQuery e Snowflake): nada de `::`, `to_char` ou subtração de datas. Usar `cast(x as {{ dbt.type_int() }})` (e `type_string`, `type_numeric`, `type_boolean`), `cast(x as date)` e `{{ dbt.datediff(...) }}`. Sem `IGNORE NULLS` (ver `int_inventory_physical_projection`).
+- Regra de negócio nova em intermediate ganha um teste unitário em `_intermediate__unit_tests.yml` (`dbt test --select test_type:unit`).
 - Ao adicionar ou mudar colunas de marts, atualizar `docs/data_dictionary.md` e conferir se alguma aba do Streamlit usa a coluna.
 
 ## O que não alterar nem commitar

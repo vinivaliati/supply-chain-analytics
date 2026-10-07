@@ -28,14 +28,12 @@ with inventory as (
         , sku_id
         , warehouse_id
         , theoretical_stock
-        , physical_stock as physical_stock_actual
         , is_counted
         , curve
         , safety_stock
         , reorder_point
         , in_transit_qty
         , avg_daily_demand
-        , last_known_physical_stock
         , coalesce(
             last_known_physical_stock + (theoretical_stock - theoretical_stock_at_last_count)
             , theoretical_stock
@@ -47,8 +45,6 @@ select
     , sku_id
     , warehouse_id
     , theoretical_stock
-    , physical_stock_actual
-    , physical_stock_projected_raw
     , greatest(physical_stock_projected_raw, 0) as physical_stock_projected
     , is_counted
     , curve
@@ -56,6 +52,5 @@ select
     , reorder_point
     , in_transit_qty
     , avg_daily_demand
-    , (physical_stock_projected_raw < 0) as projection_went_negative
     , (greatest(physical_stock_projected_raw, 0) - theoretical_stock) as physical_vs_theoretical_divergence
 from projected

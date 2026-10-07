@@ -27,7 +27,7 @@ with sales_orders as (
     select
         *
         , (fulfilled_qty >= requested_qty) as is_in_full
-        , (fulfilled_qty::numeric / nullif(requested_qty, 0)) as fill_rate
+        , (cast(fulfilled_qty as {{ dbt.type_numeric() }}) / nullif(requested_qty, 0)) as fill_rate
         , (actual_delivery_date is not null and actual_delivery_date <= promised_delivery_date) as is_on_time
         , (shipment_id is not null) as was_shipped
     from joined

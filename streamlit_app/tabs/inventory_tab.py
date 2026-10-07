@@ -23,9 +23,7 @@ def render():
     st.divider()
 
     st.subheader("Divergência físico vs. teórico por curva ABC")
-    fct_inventory["divergence"] = (
-        fct_inventory["physical_stock_projected"] - fct_inventory["theoretical_stock"]
-    ).abs()
+    fct_inventory["divergence"] = fct_inventory["physical_vs_theoretical_divergence"].abs()
 
     divergence_by_curve = (
         fct_inventory.groupby("curve")["divergence"]
