@@ -32,16 +32,19 @@ O objetivo não foi só mover dados de A para B, mas construir um conjunto de da
 
 ## Stack técnica
 
-- **Python** — geração de dados sintéticos (pandas, numpy, Faker)
-- **PostgreSQL** — data warehouse
-- **dbt** — transformação (staging → intermediate → marts), testes, snapshots, modelos incrementais
-- **Apache Airflow** — orquestração, rodando em Docker via CeleryExecutor
-- **Docker / Docker Compose** — Postgres e Airflow containerizados, cada um em seu próprio compose file
+- **Python**: geração de dados sintéticos (pandas, numpy, Faker)
+- **PostgreSQL**: data warehouse
+- **dbt**: transformação (staging → intermediate → marts), testes de dados e unitários, contratos de dados, snapshots, modelos incrementais
+- **MetricFlow**: camada semântica com nove métricas de negócio
+- **Apache Airflow**: orquestração, rodando em Docker via CeleryExecutor
+- **Docker / Docker Compose**: Postgres e Airflow containerizados, cada um em seu próprio compose file
+- **GitHub Actions**: CI a cada pull request (ruff, sqlfluff, `dbt build` em Postgres efêmero) e documentação do dbt publicada no GitHub Pages
+- **Streamlit**: dashboard sobre os marts
 
 ## Arquitetura
 
 ```
-Gerador Python → Postgres (raw) → dbt staging → dbt intermediate → dbt marts
+Gerador Python → Postgres (raw) → dbt staging → dbt intermediate → dbt marts → Streamlit
                                           ↓
                                    snapshot (SCD2)
 ```
@@ -56,7 +59,7 @@ O Airflow orquestra cada etapa acima numa única DAG: gerar dados → carregar n
 
 **Snapshot SCD Tipo 2.** A curva ABC é fixa nesse dataset, mas um snapshot do dbt (`products_abc_curve_snapshot`) ainda rastreia ela com `dbt_valid_from` / `dbt_valid_to`, demonstrando a técnica para um valor que mudaria em produção.
 
-**Modelo incremental.** `fct_inventory_daily`, a maior tabela (175 mil linhas), é incremental: cada execução só processa as datas de snapshot mais novas que a última já carregada, em vez de reconstruir todo o histórico — o padrão correto para uma tabela de fatos que cresce diariamente em produção. Depois de mudar o gerador, reconstrua com `dbt build --full-refresh`.
+**Modelo incremental.** `fct_inventory_daily`, a maior tabela (175 mil linhas), é incremental: cada execução só processa as datas de snapshot mais novas que a última já carregada, em vez de reconstruir todo o histórico, o padrão correto para uma tabela de fatos que cresce diariamente em produção. Depois de mudar o gerador, reconstrua com `dbt build --full-refresh`.
 
 **Contratos de dados e testes unitários.** Todo mart tem contrato do dbt aplicado (nomes e tipos de coluna declarados no YAML; divergência quebra o build), além de testes de integridade referencial dos fatos para as dimensões. As regras de negócio da camada intermediate (decomposição do OTIF, projeção do estoque físico) e o fato de OTIF de fornecedor são cobertos por testes unitários do dbt com dados escritos à mão.
 
@@ -71,6 +74,9 @@ supply-chain-analytics/
 ├── data_generator/          # Scripts Python que geram os dados sintéticos
 ├── dbt/supply_chain/        # Projeto dbt (staging, intermediate, marts, snapshots)
 ├── airflow/                 # DAGs do Airflow e configuração do Docker Compose
+├── streamlit_app/           # Dashboard que lê os marts do dbt
+├── .github/workflows/       # CI: lint, dbt build, deploy da documentação
+├── Makefile                 # Atalhos: up, down, dbt-build, test
 ├── docker-compose.yml       # Container do Postgres (data warehouse)
 └── docs/                    # Diagrama de arquitetura, prints do dashboard
 ```
@@ -113,8 +119,9 @@ No dataset gerado (120 SKUs, 4 CDs, 25 lojas, 365 dias):
 
 - **OTIF: 85.2%** (93.7% in-full, 86.1% on-time)
 - **Taxa de ruptura: 6.3%** dos pedidos, distribuída de forma similar entre as curvas ABC
-- **Divergência de estoque ~23x maior** entre curva A (contagem diária) e curva C (contagem mensal) — evidência direta de que a frequência de contagem afeta a acurácia de estoque, não a taxa de ruptura
+- **Divergência de estoque ~23x maior** entre curva A (contagem diária) e curva C (contagem mensal), evidência direta de que a frequência de contagem afeta a acurácia de estoque, não a taxa de ruptura
 - **Entrega no prazo (trânsito): 90.9%**, variando por confiabilidade da transportadora e distância da rota
+- **OTIF de fornecedor: 76.5%** dos pedidos de compra recebidos no prazo e completos
 
 ### Prints do dashboard
 

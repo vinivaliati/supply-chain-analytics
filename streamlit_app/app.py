@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 st.title("Supply Chain Analytics")
-st.caption("OTIF, ruptura, estoque e trânsito — dados sintéticos, pipeline dbt + Airflow")
+st.caption("OTIF, ruptura, estoque e trânsito (dados sintéticos, pipeline dbt + Airflow)")
 
 tab_otif, tab_stockouts, tab_inventory, tab_transit = st.tabs(
     ["OTIF", "Ruptura", "Estoque", "Trânsito"]
