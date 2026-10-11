@@ -120,4 +120,6 @@ Não alterar sem pedido explícito:
 
 Manter em sincronia: `README.md` (inglês) e `README.pt-br.md` (português) devem receber as mesmas alterações.
 
+Texto de documentação (READMEs, descrições nos YAMLs, textos do dashboard): não usar travessão (—). Preferir dois-pontos, vírgula, parênteses ou duas frases.
+
 Commits: prefixo convencional (`feat:`, `fix:`, `docs:`) e mensagem em português.

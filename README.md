@@ -32,14 +32,14 @@ The goal was not just to move data from A to B, but to build a dataset where the
 
 ## Tech stack
 
-- **Python** — synthetic data generation (pandas, numpy, Faker)
-- **PostgreSQL** — data warehouse
-- **dbt** — transformation (staging → intermediate → marts), data and unit tests, data contracts, snapshots, incremental models
-- **MetricFlow** — semantic layer with nine business metrics
-- **Apache Airflow** — orchestration, running on Docker via CeleryExecutor
-- **Docker / Docker Compose** — containerized Postgres and Airflow, each in its own compose file
-- **GitHub Actions** — CI on every pull request (ruff, sqlfluff, `dbt build` on an ephemeral Postgres) and dbt docs published to GitHub Pages
-- **Streamlit** — dashboard on top of the marts
+- **Python**: synthetic data generation (pandas, numpy, Faker)
+- **PostgreSQL**: data warehouse
+- **dbt**: transformation (staging → intermediate → marts), data and unit tests, data contracts, snapshots, incremental models
+- **MetricFlow**: semantic layer with nine business metrics
+- **Apache Airflow**: orchestration, running on Docker via CeleryExecutor
+- **Docker / Docker Compose**: containerized Postgres and Airflow, each in its own compose file
+- **GitHub Actions**: CI on every pull request (ruff, sqlfluff, `dbt build` on an ephemeral Postgres) and dbt docs published to GitHub Pages
+- **Streamlit**: dashboard on top of the marts
 
 ## Architecture
 
@@ -59,7 +59,7 @@ Airflow orchestrates every step above as a single DAG: generate data → load to
 
 **SCD Type 2 snapshot.** The ABC curve is fixed in this dataset, but a dbt snapshot (`products_abc_curve_snapshot`) still tracks it with `dbt_valid_from` / `dbt_valid_to`, demonstrating the technique for a value that would change in production.
 
-**Incremental model.** `fct_inventory_daily`, the largest table (175k rows), is incremental: each run only processes snapshot dates newer than the latest one already loaded, instead of rebuilding the full history — the right default for a fact table that grows daily in production. After changing the generator, rebuild it with `dbt build --full-refresh`.
+**Incremental model.** `fct_inventory_daily`, the largest table (175k rows), is incremental: each run only processes snapshot dates newer than the latest one already loaded, instead of rebuilding the full history, the right default for a fact table that grows daily in production. After changing the generator, rebuild it with `dbt build --full-refresh`.
 
 **Data contracts and unit tests.** Every mart has an enforced dbt contract (column names and types declared in YAML; a mismatch fails the build), plus referential-integrity tests from facts to dimensions. The business rules in the intermediate layer (OTIF decomposition, physical stock projection) and the supplier OTIF fact are covered by dbt unit tests with hand-written fixtures.
 
@@ -119,7 +119,7 @@ On the generated dataset (120 SKUs, 4 warehouses, 25 stores, 365 days):
 
 - **OTIF: 85.2%** (93.7% in-full, 86.1% on-time)
 - **Stockout rate: 6.3%** of orders, concentrated similarly across ABC curves
-- **Inventory divergence grows ~23x** from Curve A (daily counts) to Curve C (monthly counts) — direct evidence that count frequency drives inventory accuracy, not stockout rate
+- **Inventory divergence grows ~23x** from Curve A (daily counts) to Curve C (monthly counts), direct evidence that count frequency drives inventory accuracy, not stockout rate
 - **Transit on-time delivery: 90.9%**, varying by carrier reliability and route distance
 - **Supplier OTIF: 76.5%** of purchase orders received on time and in full
 

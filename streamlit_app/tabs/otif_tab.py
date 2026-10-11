@@ -8,7 +8,7 @@ from db import load_table
 
 
 def render():
-    st.subheader("OTIF — On Time In Full")
+    st.subheader("OTIF (On Time In Full)")
 
     fct_otif = load_table("fct_otif")
     dim_products = load_table("dim_products")
