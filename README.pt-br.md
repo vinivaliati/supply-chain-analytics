@@ -34,14 +34,17 @@ O objetivo não foi só mover dados de A para B, mas construir um conjunto de da
 
 - **Python** — geração de dados sintéticos (pandas, numpy, Faker)
 - **PostgreSQL** — data warehouse
-- **dbt** — transformação (staging → intermediate → marts), testes, snapshots, modelos incrementais
+- **dbt** — transformação (staging → intermediate → marts), testes de dados e unitários, contratos de dados, snapshots, modelos incrementais
+- **MetricFlow** — camada semântica com nove métricas de negócio
 - **Apache Airflow** — orquestração, rodando em Docker via CeleryExecutor
 - **Docker / Docker Compose** — Postgres e Airflow containerizados, cada um em seu próprio compose file
+- **GitHub Actions** — CI a cada pull request (ruff, sqlfluff, `dbt build` em Postgres efêmero) e documentação do dbt publicada no GitHub Pages
+- **Streamlit** — dashboard sobre os marts
 
 ## Arquitetura
 
 ```
-Gerador Python → Postgres (raw) → dbt staging → dbt intermediate → dbt marts
+Gerador Python → Postgres (raw) → dbt staging → dbt intermediate → dbt marts → Streamlit
                                           ↓
                                    snapshot (SCD2)
 ```
@@ -71,6 +74,9 @@ supply-chain-analytics/
 ├── data_generator/          # Scripts Python que geram os dados sintéticos
 ├── dbt/supply_chain/        # Projeto dbt (staging, intermediate, marts, snapshots)
 ├── airflow/                 # DAGs do Airflow e configuração do Docker Compose
+├── streamlit_app/           # Dashboard que lê os marts do dbt
+├── .github/workflows/       # CI: lint, dbt build, deploy da documentação
+├── Makefile                 # Atalhos: up, down, dbt-build, test
 ├── docker-compose.yml       # Container do Postgres (data warehouse)
 └── docs/                    # Diagrama de arquitetura, prints do dashboard
 ```
@@ -115,6 +121,7 @@ No dataset gerado (120 SKUs, 4 CDs, 25 lojas, 365 dias):
 - **Taxa de ruptura: 6.3%** dos pedidos, distribuída de forma similar entre as curvas ABC
 - **Divergência de estoque ~23x maior** entre curva A (contagem diária) e curva C (contagem mensal) — evidência direta de que a frequência de contagem afeta a acurácia de estoque, não a taxa de ruptura
 - **Entrega no prazo (trânsito): 90.9%**, variando por confiabilidade da transportadora e distância da rota
+- **OTIF de fornecedor: 76.5%** dos pedidos de compra recebidos no prazo e completos
 
 ### Prints do dashboard
 

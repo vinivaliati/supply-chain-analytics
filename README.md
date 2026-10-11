@@ -34,14 +34,17 @@ The goal was not just to move data from A to B, but to build a dataset where the
 
 - **Python** — synthetic data generation (pandas, numpy, Faker)
 - **PostgreSQL** — data warehouse
-- **dbt** — transformation (staging → intermediate → marts), tests, snapshots, incremental models
+- **dbt** — transformation (staging → intermediate → marts), data and unit tests, data contracts, snapshots, incremental models
+- **MetricFlow** — semantic layer with nine business metrics
 - **Apache Airflow** — orchestration, running on Docker via CeleryExecutor
 - **Docker / Docker Compose** — containerized Postgres and Airflow, each in its own compose file
+- **GitHub Actions** — CI on every pull request (ruff, sqlfluff, `dbt build` on an ephemeral Postgres) and dbt docs published to GitHub Pages
+- **Streamlit** — dashboard on top of the marts
 
 ## Architecture
 
 ```
-Python generator → Postgres (raw) → dbt staging → dbt intermediate → dbt marts
+Python generator → Postgres (raw) → dbt staging → dbt intermediate → dbt marts → Streamlit
                                           ↓
                                    snapshot (SCD2)
 ```
@@ -71,6 +74,9 @@ supply-chain-analytics/
 ├── data_generator/          # Python scripts generating synthetic source data
 ├── dbt/supply_chain/        # dbt project (staging, intermediate, marts, snapshots)
 ├── airflow/                 # Airflow DAGs and Docker Compose setup
+├── streamlit_app/           # Dashboard reading the dbt marts
+├── .github/workflows/       # CI: lint, dbt build, docs deploy
+├── Makefile                 # Shortcuts: up, down, dbt-build, test
 ├── docker-compose.yml       # Postgres (data warehouse) container
 └── docs/                    # Architecture diagram, dashboard screenshots
 ```
@@ -115,6 +121,7 @@ On the generated dataset (120 SKUs, 4 warehouses, 25 stores, 365 days):
 - **Stockout rate: 6.3%** of orders, concentrated similarly across ABC curves
 - **Inventory divergence grows ~23x** from Curve A (daily counts) to Curve C (monthly counts) — direct evidence that count frequency drives inventory accuracy, not stockout rate
 - **Transit on-time delivery: 90.9%**, varying by carrier reliability and route distance
+- **Supplier OTIF: 76.5%** of purchase orders received on time and in full
 
 ### Dashboard screenshots
 
